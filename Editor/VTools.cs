@@ -1,5 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
@@ -10,25 +12,31 @@ using FileSystem = Editor.FileSystem;
 namespace MANIFOLD {
     public static class VTools {
         public const string GITHUB_LINK = "https://github.com/dotMANIFOLD/sbox-vtools";
-        public const string DOWNLOAD_LINK = "";
+        public const string DOWNLOAD_LINK = GITHUB_LINK + "/releases/latest/download/vtools.zip";
         
-        public const string FOLDER_PATH = "vtools/";
+        public const string VTOOLS_FOLDER = "vtools/";
         public const string EXECUTABLE = "vtools.exe";
         public const string SETTINGS = "settings.json";
 
         public const string WORK_FOLDER = "vtools_work/";
 
-        public static string ExecutablePath => FileSystem.ProjectTemporary.GetFullPath(FOLDER_PATH + EXECUTABLE);
+        public static string ExecutablePath => FileSystem.ProjectTemporary.GetFullPath(VTOOLS_FOLDER + EXECUTABLE);
+        public static string VToolsFolder => FileSystem.ProjectTemporary.GetFullPath(VTOOLS_FOLDER);
         public static string WorkFolder => FileSystem.ProjectTemporary.GetFullPath(WORK_FOLDER);
 
         public static async Task Execute(string command, params string[] args) {
             if (!ExecutableExists()) {
-                bool result = await ShowConfirmation($"VTools are missing. Do you want to download VTools?\nVTools is open source and hosted on GitHub.\n{GITHUB_LINK}");
-                if (result) {
-                    // TODO: add download
-                    Log.Warning("Download not implemented yet.");
+                bool askResult = await ShowConfirmation($"VTools are missing. Do you want to download VTools?\nVTools is open source and hosted on GitHub.\n{GITHUB_LINK}\n\nIt will be downloaded from\n{DOWNLOAD_LINK}");
+                if (!askResult) {
+                    Log.Info("VTools: Download declined. Cancelling command.");
+                    return;
                 }
-                return;
+                
+                bool downloadResult = await DownloadFiles();
+                if (!downloadResult) {
+                    Log.Info("VTools: Download cancelled.");
+                    return;
+                }
             }
             
             if (!SettingsExists()) {
@@ -78,7 +86,7 @@ namespace MANIFOLD {
         
         // CHECKS
         public static bool ExecutableExists() {
-            return FileSystem.ProjectTemporary.FileExists(FOLDER_PATH + EXECUTABLE);
+            return FileSystem.ProjectTemporary.FileExists(VTOOLS_FOLDER + EXECUTABLE);
         }
         
         public static bool SettingsExists() {
@@ -94,6 +102,24 @@ namespace MANIFOLD {
             
             await Task.WhenAny(success.Task, fail.Task);
             return success.Task.IsCompletedSuccessfully;
+        }
+
+        private static async ValueTask<bool> DownloadFiles() {
+            FileSystem.ProjectTemporary.CreateDirectory(VTOOLS_FOLDER);
+            
+            using var handle = Progress.Start("Downloading VTools");
+            var token = Progress.GetCancel();
+            var bytes = await Http.RequestBytesAsync(DOWNLOAD_LINK, cancellationToken: token);
+
+            if (token.IsCancellationRequested) {
+                return false;
+            }
+            
+            using var stream = new MemoryStream(bytes);
+            using var zip = new ZipArchive(stream);
+            zip.ExtractToDirectory(VToolsFolder);
+
+            return true;
         }
     }
 }
