@@ -163,10 +163,10 @@ namespace MANIFOLD.AnimGraph {
         private void CreateAnimGraph() {
             animGraph = new AnimGraph();
             var finalPose = new FinalPose();
-            var animationClip = new AnimationNode() {
-                animation = "@Male_Run",
-                playbackSpeed = 1.2f,
-                looping = true
+            var animationClip = new AnimationClip() {
+                Animation = "@Male_Run",
+                PlaybackSpeed = 1.2f,
+                Looping = true
             };
             finalPose.Pose = animationClip;
             animGraph.AddNode(finalPose);

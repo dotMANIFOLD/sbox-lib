@@ -2,51 +2,54 @@
 using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
+using MANIFOLD.Animation;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph {
     using Nodes;
     
-    [GameResource("Animation Graph", EXTENSION, "Graph to animate a model", Category = LibraryData.CATEGORY, Icon = "account_tree")]
+    [GameResource("Animation Graph", EXTENSION, "Graph to animate a model", Category = LibraryData.CATEGORY, Icon = "account_tree", IconBgColor = AnimationCollection.BG_COLOR)]
     public class AnimGraph : GameResource {
         public const string EXTENSION = "manmgrph";
+        public const string TYPE_FIELD = "_type";
         
+        public AnimationCollection Collection { get; set; }
         [WideMode, ReadOnly, JsonIgnore]
         public Dictionary<Guid, JobNode> Nodes { get; set; }
+        
         [Hide]
         public JsonArray SerializedNodes {
             get {
                 JsonArray arr = new JsonArray();
                 foreach (var node in Nodes.Values) {
-                    arr.Add(Json.ToNode(node));
+                    var jsonNode = Json.ToNode(node);
+                    jsonNode[TYPE_FIELD] = Json.ToNode(node.GetType(), typeof(Type));
+                    arr.Add(jsonNode);
                 }
                 return arr;
             }
             set {
                 Nodes.Clear();
                 foreach (var node in value) {
-                    var deserialized = (JobNode)Json.Deserialize(node.ToString(), Json.FromNode<Type>(node["Type"]));
+                    var type = Json.FromNode<Type>(node[TYPE_FIELD]);
+                    var deserialized = (JobNode)Json.Deserialize(node.ToString(), type);
                     Nodes.Add((Guid)node[nameof(JobNode.ID)], deserialized);
                 }
             }
         }
-        
-        // EDITOR DATA
-        public Vector2 EditorPosition { get; set; }
-        public float EditorScale { get; set; } = 1;
 
         [JsonIgnore, Hide]
         public FinalPose FinalPoseNode => (FinalPose)Nodes[Guid.AllBitsSet];
         
         public static AnimGraph DefaultPreset() {
             var graph = new AnimGraph();
-            graph.AddNode(new FinalPose());
-            graph.AddNode(new AnimationNode() { Position = new Vector2(-500, 0) });
+            graph.AddNode(new AnimationClip() { Position = new Vector2(-500, 0) });
             return graph;
         }
         
         public AnimGraph() {
             Nodes = new Dictionary<Guid, JobNode>();
+            Nodes.Add(Guid.AllBitsSet, new FinalPose());
         }
         
         public void AddNode(JobNode node) {
@@ -55,6 +58,14 @@ namespace MANIFOLD.AnimGraph {
                 return;
             }
             Nodes.Add(node.ID, node);
+        }
+
+        public void RemoveNode(JobNode node) {
+            Nodes.Remove(node.ID);
+        }
+
+        public void RemoveNode(Guid id) {
+            Nodes.Remove(id);
         }
     }
 }

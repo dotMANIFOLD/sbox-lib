@@ -12,7 +12,7 @@ namespace MANIFOLD.Animation {
         public float FrameRate { get; set; } = 24;
         public int FrameCount { get; set; } = 0;
         
-        [WideMode]
+        [WideMode, JsonIgnore]
         public List<Track> Tracks { get; set; } = new List<Track>();
         
         [Hide]
@@ -20,9 +20,9 @@ namespace MANIFOLD.Animation {
             get {
                 JsonArray arr = new JsonArray();
                 foreach (var track in Tracks) {
-                    var node = Json.ToNode(track);
-                    node[TYPE_FIELD] = Json.ToNode(track.GetType());
-                    arr.Add(node);
+                    var jsonNode = Json.ToNode(track);
+                    jsonNode[TYPE_FIELD] = Json.ToNode(track.GetType(), typeof(Type));
+                    arr.Add(jsonNode);
                 }
                 return arr;
             }

@@ -4,7 +4,9 @@ using System.Linq;
 using System.Reflection;
 using Editor;
 using Editor.NodeEditor;
+using Facepunch.ActionGraphs;
 using Sandbox;
+using DisplayInfo = Sandbox.DisplayInfo;
 
 namespace MANIFOLD.AnimGraph.Editor {
     using Nodes;
@@ -46,27 +48,27 @@ namespace MANIFOLD.AnimGraph.Editor {
     }
 
     public class GraphPlugIn : GraphPlug, IPlugIn {
-        private PropertyInfo info;
         private DisplayInfo displayInfo;
+        private NodeReference reference;
         
         public override string Identifier => $"{Node.Identifier}.In.{PlugIndex}";
         public override DisplayInfo DisplayInfo => displayInfo;
 
         public IPlugOut ConnectedOutput {
             get {
-                var reference = (JobNodeReference)info.GetValue(Node.RealNode);
                 if (!reference.IsValid) return null;
-
-                return Node.Graph.Nodes[reference.OtherNode.Value].Outputs.First();
+                return Node.Graph.Nodes[reference.ID.Value].Outputs.First();
             }
             set {
-                info.SetValue(Node.RealNode, (JobNodeReference)(((GraphNode)value?.Node)?.RealNode));
+                var node = ((GraphNode)value?.Node)?.RealNode;
+                reference.ID = node?.ID;
+                Log.Info($"Set connnection: {node?.ID}");
             }
         }
 
-        public GraphPlugIn(GraphNode node, int plugIndex, PropertyInfo info) : base(node, plugIndex) {
-            this.info = info;
-            displayInfo = DisplayInfo.ForMember(info);
+        public GraphPlugIn(GraphNode node, int plugIndex, NodeReference reference, DisplayInfo info) : base(node, plugIndex) {
+            this.reference = reference;
+            this.displayInfo = info;
         }
         
         public float? GetHandleOffset(string name) {
@@ -92,15 +94,17 @@ namespace MANIFOLD.AnimGraph.Editor {
     
     public class GraphNode : INode {
         protected GraphWrapper graph;
+        protected JobNodeUI ui;
         protected JobNode realNode;
         protected List<GraphPlugIn> inputs;
         protected List<GraphPlugOut> outputs;
-        protected List<JobNodeReference> realInputs;
 
         public GraphWrapper Graph => graph;
         public JobNode RealNode => realNode;
         public string Identifier => realNode.ID.ToString();
         public virtual DisplayInfo DisplayInfo { get; }
+        public Color PrimaryColor { get; set; } = Color.White;
+        public Color AccentColor { get; set; } = Color.White;
 
         public Vector2 Position {
             get => realNode.Position;
@@ -115,7 +119,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         public bool IsReachable => true;
 
         public bool CanClone => true;
-        public bool CanRemove => true;
+        public bool CanRemove => realNode is not FinalPose;
 
         public Pixmap Thumbnail => null;
 
@@ -129,22 +133,81 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             inputs = new List<GraphPlugIn>();
             outputs = new List<GraphPlugOut>();
-            realInputs = new List<JobNodeReference>();
+            
+            DisplayInfo = DisplayInfo.For(realNode);
+            
+            Refresh();
+        }
 
+        public void Refresh() {
+            inputs.Clear();
+            outputs.Clear();
+            
             var nodeType = realNode.GetType();
             int count = 0;
+            
             foreach (var prop in nodeType.GetProperties()) {
-                if (prop.GetCustomAttribute<InputAttribute>() is { } attr) {
-                    inputs.Add(new GraphPlugIn(this, count, prop));
-                    realInputs.Add((JobNodeReference)prop.GetValue(realNode));
-                    count++;
+                if (prop.GetCustomAttribute<InputAttribute>() == null) continue;
+                
+                Type propType;
+                if (prop.PropertyType.IsArray) {
+                    int rank = prop.PropertyType.GetArrayRank();
+                    if (rank != 1) {
+                        Log.Warning("Multi dimensional arrays are not supported.");
+                        continue;
+                    }
+                    
+                    propType = prop.PropertyType.GetElementType();
+                } else {
+                    propType = prop.PropertyType;
+                }
+                
+                bool isReference = propType.IsAssignableTo(typeof(NodeReference));
+                bool isProvider = propType.IsAssignableTo(typeof(INodeReferenceProvider));
+                
+                if (!isReference && !isProvider) {
+                    Log.Warning("Invalid input type.");
+                    continue;
+                }
+                
+                NodeReference GetReference(object obj) {
+                    if (obj == null) return null;
+                    if (isReference) {
+                        return (NodeReference)obj;
+                    } else {
+                        return ((INodeReferenceProvider)obj).Reference;
+                    }
+                }
+                
+                if (prop.PropertyType.IsArray) {
+                    var arr = (Array)prop.GetValue(realNode);
+                    if (arr == null) continue;
+                    
+                    for (int i = 0; i < arr.Length; i++) {
+                        var reference = GetReference(arr.GetValue(i));
+                        if (reference == null) continue;
+
+                        var displayInfo = new DisplayInfo();
+                        displayInfo.Name = $"Slot {count}";
+                        
+                        inputs.Add(new GraphPlugIn(this, count, reference, displayInfo));
+                        count++;
+                    }
+                } else {
+                    var reference = GetReference(prop.GetValue(realNode));
+                    if (reference == null) continue;
+                    
+                    inputs.Add(new GraphPlugIn(this, count, reference, DisplayInfo.ForMember(prop)));
+                    count++;  
                 }
             }
             if (realNode is not FinalPose) {
                 outputs.Add(new GraphPlugOut(this, 0));
             }
-            
-            DisplayInfo = DisplayInfo.For(realNode);
+
+            if (ui != null) {
+                ui.MarkNodeChanged();
+            }
         }
         
         public virtual void OnPaint(Rect rect) {
@@ -156,11 +219,15 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
         
         public virtual NodeUI CreateUI(GraphView view) {
-            return new NodeUI(view, this);
+            return ui = new JobNodeUI(view, this);
         }
 
         public virtual Color GetPrimaryColor(GraphView view) {
-            return Color.White;
+            return PrimaryColor;
+        }
+
+        public virtual Color GetAccentColor(GraphView view) {
+            return realNode.AccentColor;
         }
 
         public virtual Menu CreateContextMenu(NodeUI node) {

@@ -4,26 +4,22 @@ using System.Text.Json.Serialization;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph {
-    /// <summary>
-    /// Serializable reference to another job node.
-    /// </summary>
-    public struct JobNodeReference : IValid {
-        public Guid? OtherNode { get; set; }
+    public static class JobCategories {
+        public const string FINAL_COLOR = "#eace1b";
+        
+        public const string SAMPLING = "Sampling";
+        public const string SAMPLING_COLOR = "#b02bea";
 
-        [JsonIgnore]
-        public bool IsValid => OtherNode.HasValue;
+        public const string BLEND = "Blend";
+        public const string BLEND_COLOR = "#44c83f";
 
-        public static implicit operator JobNodeReference(JobNode node) {
-            if (node == null) return default;
-            
-            return new JobNodeReference() {
-                OtherNode = node.ID
-            };
-        }
+        public const string MODIFIER = "Modifier";
+        public const string MODIFIER_COLOR = "#ee8013";
     }
     
     public abstract class JobNode : BaseNode {
-        public Type Type => GetType();
+        [JsonIgnore]
+        public abstract Color AccentColor { get; }
         
         public abstract IBaseAnimJob CreateJob();
     }
