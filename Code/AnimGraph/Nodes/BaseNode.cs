@@ -27,6 +27,8 @@ namespace MANIFOLD.AnimGraph {
     }
     
     public abstract class BaseNode {
+        [JsonIgnore, Hide]
+        public AnimGraph Graph { get; set; }
         public Guid ID { get; set; } = Guid.NewGuid();
         
         [JsonIgnore]

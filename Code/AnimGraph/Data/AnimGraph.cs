@@ -33,6 +33,7 @@ namespace MANIFOLD.AnimGraph {
                 foreach (var node in value) {
                     var type = Json.FromNode<Type>(node[TYPE_FIELD]);
                     var deserialized = (JobNode)Json.Deserialize(node.ToString(), type);
+                    deserialized.Graph = this;
                     Nodes.Add((Guid)node[nameof(JobNode.ID)], deserialized);
                 }
             }

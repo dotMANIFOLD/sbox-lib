@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text.Json.Serialization;
 using Sandbox;
 
@@ -22,5 +23,6 @@ namespace MANIFOLD.AnimGraph {
         public abstract Color AccentColor { get; }
         
         public abstract IBaseAnimJob CreateJob();
+        public abstract IEnumerable<NodeReference> GetInputs();
     }
 }

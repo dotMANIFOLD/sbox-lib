@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Sandbox;
 
@@ -26,6 +27,10 @@ namespace MANIFOLD.AnimGraph.Nodes {
                 playbackSpeed = PlaybackSpeed,
                 looping = Looping
             };
+        }
+
+        public override IEnumerable<NodeReference> GetInputs() {
+            return Enumerable.Empty<NodeReference>();
         }
     }
 }

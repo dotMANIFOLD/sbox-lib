@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text.Json.Serialization;
 using Sandbox;
 
@@ -21,6 +23,10 @@ namespace MANIFOLD.AnimGraph.Nodes {
 
         public override IBaseAnimJob CreateJob() {
             return new ApplyToModelJob();
+        }
+
+        public override IEnumerable<NodeReference> GetInputs() {
+            return [Pose];
         }
     }
 }
