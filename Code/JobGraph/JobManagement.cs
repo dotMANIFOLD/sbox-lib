@@ -4,6 +4,9 @@ using System.Linq;
 
 namespace MANIFOLD.Jobs {
     public static class JobManagement {
+        /// <summary>
+        /// Represents a set of jobs that can be called in order without waiting for any other jobs.
+        /// </summary>
         public class JobBranch {
             /// <summary>
             /// In execution order.
@@ -13,6 +16,11 @@ namespace MANIFOLD.Jobs {
             public List<JobBranch> executes = new();
             public int depth = 0;
 
+            /// <summary>
+            /// Creates a new graph and sets all jobs in this branch to it
+            /// </summary>
+            /// <typeparam name="T">Graph type</typeparam>
+            /// <returns>The new graph</returns>
             public T CreateGraph<T>() where T : IJobGraph, new() {
                 T graph = new T();
                 foreach (var job in jobs) {
@@ -25,7 +33,15 @@ namespace MANIFOLD.Jobs {
         public delegate void TraverseCallback<in T>(T job) where T : IJob;
         
         // GRAPH
-        public static T SetGraph<T>(this T job, IJobGraph jobGraph, bool patch = true) where T : IJob {
+        /// <summary>
+        /// Sets the owning graph for a job.
+        /// </summary>
+        /// <remarks>Remember, jobs do not have to be in the same graph.</remarks>
+        /// <param name="job">Job to set the graph of</param>
+        /// <param name="jobGraph">New graph to set, <c>null</c> is allowed.</param>
+        /// <typeparam name="T">Job type</typeparam>
+        /// <returns></returns>
+        public static T SetGraph<T>(this T job, IJobGraph jobGraph) where T : IJob {
             if (job.Graph == jobGraph) return job;
             if (job.Graph != null) {
                 job.Graph.RemoveJob(job);
@@ -55,6 +71,16 @@ namespace MANIFOLD.Jobs {
         }
         
         // CONNECTIONS
+        /// <summary>
+        /// This job should output to <c>output</c>
+        /// </summary>
+        /// <param name="output">Source of data</param>
+        /// <param name="input">Destination for data</param>
+        /// <param name="index">Index of destination</param>
+        /// <typeparam name="TJob">Job type outputting data</typeparam>
+        /// <typeparam name="TData">Data type being outputted</typeparam>
+        /// <returns>The job this was called on</returns>
+        /// <exception cref="IndexOutOfRangeException">The destination <c>index</c> provided does not exist.</exception>
         public static TJob OutputTo<TJob, TData>(this TJob output, IInputJob<TData> input, int index) where TJob : IOutputJob<TData> {
             if (index < 0 || input.Inputs.Count <= index) {
                 throw new IndexOutOfRangeException();
@@ -71,6 +97,16 @@ namespace MANIFOLD.Jobs {
             return output;
         }
         
+        /// <summary>
+        /// This job should get it's input for slot <c>index</c> from 
+        /// </summary>
+        /// <param name="input">Destination for data</param>
+        /// <param name="output">Source of data</param>
+        /// <param name="index">Index of destination</param>
+        /// <typeparam name="TJob">Job type outputting data</typeparam>
+        /// <typeparam name="TData">Data type being outputted</typeparam>
+        /// <returns>The job this called this on</returns>
+        /// <exception cref="IndexOutOfRangeException">The destination <c>index</c> provided does not exist.</exception>
         public static TJob InputFrom<TJob, TData>(this TJob input, IOutputJob<TData> output, int index) where TJob : IInputJob<TData> {
             if (index < 0 || input.Inputs.Count <= index) {
                 throw new IndexOutOfRangeException();
@@ -87,6 +123,13 @@ namespace MANIFOLD.Jobs {
             return input;
         }
 
+        /// <summary>
+        /// Disconnect output at <c>index</c>
+        /// </summary>
+        /// <param name="job">Job to modify</param>
+        /// <param name="index">Index of output to remove</param>
+        /// <typeparam name="TOutput">Data type being outputted</typeparam>
+        /// <exception cref="IndexOutOfRangeException">The <c>index</c> provided does not exist in outputs</exception>
         public static void RemoveOutput<TOutput>(this IOutputJob<TOutput> job, int index) {
             if (index < 0 || job.Outputs.Count <= index) {
                 throw new IndexOutOfRangeException();
@@ -97,6 +140,13 @@ namespace MANIFOLD.Jobs {
             job.RemoveOutput(target.Job, index);
         }
         
+        /// <summary>
+        /// Disconnect input at <c>index</c>
+        /// </summary>
+        /// <param name="job">Job to modify</param>
+        /// <param name="index">Index of input to remove</param>
+        /// <typeparam name="TInput">Data type being inputted</typeparam>
+        /// <exception cref="IndexOutOfRangeException">The <c>index</c> provided does not exist in inputs</exception>
         public static void RemoveInput<TInput>(this IInputJob<TInput> job, int index) {
             if (index < 0 || job.Inputs.Count <= index) {
                 throw new IndexOutOfRangeException();
@@ -133,6 +183,11 @@ namespace MANIFOLD.Jobs {
         }
         
         // BRANCHES
+        /// <summary>
+        /// Splits the graph into several branches. Branches can be used to get execution order and or what groups to asynchronously run.
+        /// </summary>
+        /// <param name="job">Job to start resolving from. Any jobs to the right are not considered.</param>
+        /// <returns>Branches originating from the provided job</returns>
         public static JobBranch ResolveBranches(this IInputJob job) {
             Dictionary<IJob, JobBranch> branchCache = new Dictionary<IJob, JobBranch>();
             JobBranch initialBranch = new JobBranch();
@@ -142,6 +197,10 @@ namespace MANIFOLD.Jobs {
             return initialBranch;
         }
 
+        /// <summary>
+        /// Just like <see cref="ResolveBranches"/>, but it returns all branches instead of the root one.
+        /// </summary>
+        /// <inheritdoc cref="ResolveBranches"/>
         public static IEnumerable<JobBranch> ResolveBranchesFlat(this IInputJob job) {
             Dictionary<IJob, JobBranch> branchCache = new Dictionary<IJob, JobBranch>();
             JobBranch initialBranch = new JobBranch();
