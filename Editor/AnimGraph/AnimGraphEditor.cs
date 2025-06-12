@@ -91,7 +91,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             tagList = new TagList();
             graphView = new AnimGraphView(this);
             
-            inspector.OnChange += OnPropertyChanged;
+            inspector.OnInputChanged += OnPropertyChanged;
             graphView.OnSelectionChanged += OnSelectionChanged;
             
             dock.RegisterDockType("Preview", null, () => preview = new Preview());
@@ -116,7 +116,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         private void OnPropertyChanged() {
             foreach (var node in graphView.SelectedItems.Cast<NodeUI>().Select(x => x.Node).Cast<GraphNode>()) {
-                node.Refresh();
+                node.UpdatePlugs();
             }
         }
         

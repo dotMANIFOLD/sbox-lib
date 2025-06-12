@@ -58,10 +58,12 @@ namespace MANIFOLD.AnimGraph {
                 Log.Warning($"Node with ID {node.ID} already exists!");
                 return;
             }
+            node.Graph = this;
             Nodes.Add(node.ID, node);
         }
 
         public void RemoveNode(JobNode node) {
+            node.Graph = null;
             Nodes.Remove(node.ID);
         }
 

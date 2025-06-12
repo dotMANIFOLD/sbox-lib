@@ -19,14 +19,22 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
         
         public void AddNode(INode node) {
-            var realNode = ((GraphNode)node).RealNode;
+            var graphNode = (GraphNode)node;
+            var realNode = graphNode.RealNode;
+            
+            nodes.Add(realNode.ID, graphNode);
             Graph.AddNode(realNode);
+            
             Log.Info($"Added node {realNode.ID}");
         }
 
         public void RemoveNode(INode node) {
-            var realNode = ((GraphNode)node).RealNode;
+            var graphNode = (GraphNode)node;
+            var realNode = graphNode.RealNode;
+            
+            nodes.Add(realNode.ID, graphNode);
             Graph.RemoveNode(realNode);
+            
             Log.Info($"Removed node {realNode.ID}");
         }
 

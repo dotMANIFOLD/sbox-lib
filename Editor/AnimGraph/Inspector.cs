@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Editor;
@@ -9,8 +10,12 @@ namespace MANIFOLD.AnimGraph.Editor {
         public const string EMPTY_LABEL = "Select a node to view it's properties...";
 
         private SerializedObject serialized;
+        private bool changingCollection;
+        private int oldCollectionCount;
+        private bool addOperation;
+        private int addCount;
 
-        public event Action OnChange;
+        public event Action OnInputChanged;
         
         public Inspector() {
             Name = "Inspector";
@@ -23,7 +28,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         public void SetNodes(IEnumerable<GraphNode> nodes) {
             Layout.Clear(true);
-
+            
             if (nodes == null) {
                 ShowLabel(EMPTY_LABEL);
                 return;
@@ -37,15 +42,23 @@ namespace MANIFOLD.AnimGraph.Editor {
                 ShowLabel("Multi-edit not supported");
                 return;
             }
-
+            
             serialized = EditorTypeLibrary.GetSerializedObject(nodes.First().RealNode);
+            serialized.OnPropertyPreChange += OnPropertyPreChange;
             serialized.OnPropertyChanged += OnPropertyChanged;
             
             var sheet = new ControlSheet();
             sheet.AddObject(serialized);
             
-            Layout.Add(sheet);
-            Layout.AddStretchCell();
+            var scroll = new ScrollArea(this);
+            scroll.Canvas = new Widget();
+            scroll.Canvas.Layout = Layout.Column();
+            scroll.Canvas.SetSizeMode(SizeMode.Flexible, SizeMode.CanGrow);
+            
+            scroll.Canvas.Layout.Add(sheet);
+            scroll.Canvas.Layout.AddStretchCell();
+            
+            Layout.Add(scroll);
         }
         
         private void ShowLabel(string text) {
@@ -56,8 +69,41 @@ namespace MANIFOLD.AnimGraph.Editor {
             Layout.AddStretchCell();
         }
 
+        private void OnPropertyPreChange(SerializedProperty property) {
+            // this check apparently has inheritance, so all elements of an array count as having this attribute
+            // just maybe it should be changed
+            if (!property.HasAttribute<InputAttribute>()) return;
+            
+            Type type = property.PropertyType;
+            bool validType = type.IsAssignableTo(typeof(IEnumerable<NodeReference>)) || type.IsAssignableTo(typeof(IEnumerable<INodeReferenceProvider>));
+            if (!validType) return;
+            
+            changingCollection = true;
+            oldCollectionCount = property.GetValue<IEnumerable<object>>().Count();
+        }
+        
         private void OnPropertyChanged(SerializedProperty property) {
-            OnChange?.Invoke();
+            if (addCount > 0) {
+                addCount--;
+
+                if (addCount == 0) {
+                    OnInputChanged?.Invoke();
+                }
+            }
+            
+            if (changingCollection) {
+                var enumerable = property.GetValue<IEnumerable<object>>();
+                int newCount = enumerable.Count();
+
+                addCount = newCount - oldCollectionCount;
+                addOperation = addCount > 0;
+
+                if (!addOperation) {
+                    OnInputChanged?.Invoke();
+                }
+
+                changingCollection = false;
+            }
         }
     }
 }

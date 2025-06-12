@@ -93,6 +93,10 @@ namespace MANIFOLD.AnimGraph.Editor {
     }
     
     public class GraphNode : INode {
+        public enum InputOrigin { Property, Collection }
+        
+        public record InputData(InputOrigin Origin, NodeReference Reference, DisplayInfo Info);
+        
         protected GraphWrapper graph;
         protected JobNodeUI ui;
         protected JobNode realNode;
@@ -134,80 +138,36 @@ namespace MANIFOLD.AnimGraph.Editor {
             inputs = new List<GraphPlugIn>();
             outputs = new List<GraphPlugOut>();
             
-            DisplayInfo = DisplayInfo.For(realNode);
-            
-            Refresh();
-        }
-
-        public void Refresh() {
-            inputs.Clear();
-            outputs.Clear();
-            
-            var nodeType = realNode.GetType();
-            int count = 0;
-            
-            foreach (var prop in nodeType.GetProperties()) {
-                if (prop.GetCustomAttribute<InputAttribute>() == null) continue;
-                
-                Type propType;
-                if (prop.PropertyType.IsArray) {
-                    int rank = prop.PropertyType.GetArrayRank();
-                    if (rank != 1) {
-                        Log.Warning("Multi dimensional arrays are not supported.");
-                        continue;
-                    }
-                    
-                    propType = prop.PropertyType.GetElementType();
-                } else {
-                    propType = prop.PropertyType;
-                }
-                
-                bool isReference = propType.IsAssignableTo(typeof(NodeReference));
-                bool isProvider = propType.IsAssignableTo(typeof(INodeReferenceProvider));
-                
-                if (!isReference && !isProvider) {
-                    Log.Warning("Invalid input type.");
-                    continue;
-                }
-                
-                NodeReference GetReference(object obj) {
-                    if (obj == null) return null;
-                    if (isReference) {
-                        return (NodeReference)obj;
-                    } else {
-                        return ((INodeReferenceProvider)obj).Reference;
-                    }
-                }
-                
-                if (prop.PropertyType.IsArray) {
-                    var arr = (Array)prop.GetValue(realNode);
-                    if (arr == null) continue;
-                    
-                    for (int i = 0; i < arr.Length; i++) {
-                        var reference = GetReference(arr.GetValue(i));
-                        if (reference == null) continue;
-
-                        var displayInfo = new DisplayInfo();
-                        displayInfo.Name = $"Slot {count}";
-                        
-                        inputs.Add(new GraphPlugIn(this, count, reference, displayInfo));
-                        count++;
-                    }
-                } else {
-                    var reference = GetReference(prop.GetValue(realNode));
-                    if (reference == null) continue;
-                    
-                    inputs.Add(new GraphPlugIn(this, count, reference, DisplayInfo.ForMember(prop)));
-                    count++;  
-                }
+            var nodeInputs = GetNodeInputs();
+            for (int i = 0; i < nodeInputs.Count; i++) {
+                var input = nodeInputs[i];
+                inputs.Add(new GraphPlugIn(this, i, input.Reference, input.Info));
             }
             if (realNode is not FinalPose) {
                 outputs.Add(new GraphPlugOut(this, 0));
             }
+            
+            DisplayInfo = DisplayInfo.For(realNode);
+        }
 
-            if (ui != null) {
-                ui.MarkNodeChanged();
+        public void UpdatePlugs() {
+            var nodeInputs = GetNodeInputs();
+            int delta = nodeInputs.Count - inputs.Count;
+
+            if (delta == 0) return;
+
+            if (delta < 0) {
+                for (int i = 0; i > delta; i--) {
+                    inputs.RemoveAt(inputs.Count - 1);
+                }
+            } else {
+                for (int i = inputs.Count; i < nodeInputs.Count; i++) {
+                    var input = nodeInputs[i];
+                    inputs.Add(new GraphPlugIn(this, i, input.Reference, input.Info));
+                }
             }
+            
+            ui.MarkNodeChanged();
         }
         
         public virtual void OnPaint(Rect rect) {
@@ -232,6 +192,59 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         public virtual Menu CreateContextMenu(NodeUI node) {
             return null;
+        }
+
+        private List<InputData> GetNodeInputs() {
+            List<InputData> inputs = new List<InputData>();
+            var type = realNode.GetType();
+
+            foreach (var prop in type.GetProperties()) {
+                if (prop.GetCustomAttribute<InputAttribute>() == null) continue;
+                
+                if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<NodeReference>))) {
+                    // collection of references
+                    var col = (IEnumerable<NodeReference>)prop.GetValue(realNode);
+                    if (col == null) continue;
+                    
+                    int count = 0;
+                    foreach (var reference in col) {
+                        if (!reference.IsValid()) continue;
+                        
+                        DisplayInfo info = default;
+                        info.Name = $"Slot {count}";
+                        inputs.Add(new InputData(InputOrigin.Collection, reference, info));
+                        count++;
+                    }
+                } else if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<INodeReferenceProvider>))) {
+                    // collection of providers
+                    var col = (IEnumerable<INodeReferenceProvider>)prop.GetValue(realNode);
+                    if (col == null) continue;
+
+                    int count = 0;
+                    foreach (var provider in col) {
+                        if (provider == null) continue;
+                        
+                        DisplayInfo info = default;
+                        info.Name = $"Slot {count}";
+                        inputs.Add(new InputData(InputOrigin.Collection, provider.Reference, info));
+                        count++;
+                    }
+                } else if (prop.PropertyType.IsAssignableTo(typeof(NodeReference))) {
+                    // reference
+                    var reference = (NodeReference)prop.GetValue(realNode);
+                    if (!reference.IsValid()) continue;
+                    
+                    inputs.Add(new InputData(InputOrigin.Property, reference, DisplayInfo.ForMember(prop)));
+                } else if (prop.PropertyType.IsAssignableTo(typeof(INodeReferenceProvider))) {
+                    // provider
+                    var provider = (INodeReferenceProvider)prop.GetValue(realNode);
+                    if (provider == null) continue;
+                    
+                    inputs.Add(new InputData(InputOrigin.Property, provider.Reference, DisplayInfo.ForMember(prop)));
+                }
+            }
+
+            return inputs;
         }
     }
 }
