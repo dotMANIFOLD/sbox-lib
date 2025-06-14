@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using MANIFOLD.AnimGraph.Jobs;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Nodes {

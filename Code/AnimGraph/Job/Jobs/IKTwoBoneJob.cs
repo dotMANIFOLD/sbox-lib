@@ -1,7 +1,7 @@
 ﻿using System;
 using MANIFOLD.Jobs;
 
-namespace MANIFOLD.AnimGraph {
+namespace MANIFOLD.AnimGraph.Jobs {
     // Algorithm by Ryan Juckett
     // Analytic Two-Bone IK in 2D: https://www.ryanjuckett.com/analytic-two-bone-ik-in-2d/
     

@@ -5,6 +5,8 @@ using Sandbox;
 using Sandbox.Diagnostics;
 
 namespace MANIFOLD.AnimGraph {
+    using Jobs;
+    
     [Title("MANIFOLD Animator")]
     [Category(LibraryData.CATEGORY)]
     public class MANIFOLDAnimator : Component, Component.ExecuteInEditor {

@@ -3,7 +3,7 @@ using System.Linq;
 using MANIFOLD.Jobs;
 using Sandbox;
 
-namespace MANIFOLD.AnimGraph {
+namespace MANIFOLD.AnimGraph.Jobs {
     // Implementation based off of ozz-animation BlendingJob.
     public abstract class BlendingJob : AnimJob {
         protected float[] weights;

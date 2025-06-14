@@ -5,7 +5,7 @@ using MANIFOLD.Jobs;
 using MANIFOLD.Animation;
 using Sandbox;
 
-namespace MANIFOLD.AnimGraph {
+namespace MANIFOLD.AnimGraph.Jobs {
     public class SampleJob : IOutputAnimJob {
         private class TrackGroup {
             public Track<Vector3> position;

@@ -4,7 +4,7 @@ using System.Linq;
 using MANIFOLD.Jobs;
 using Sandbox;
 
-namespace MANIFOLD.AnimGraph {
+namespace MANIFOLD.AnimGraph.Jobs {
     public sealed class ApplyToModelJob : IInputAnimJob {
         private Input<JobResults>[] inputs = [ null ];
 
