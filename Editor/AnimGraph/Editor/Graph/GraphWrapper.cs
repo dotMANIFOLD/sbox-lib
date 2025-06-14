@@ -32,7 +32,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             var graphNode = (GraphNode)node;
             var realNode = graphNode.RealNode;
             
-            nodes.Add(realNode.ID, graphNode);
+            nodes.Remove(realNode.ID);
             Graph.RemoveNode(realNode);
             
             Log.Info($"Removed node {realNode.ID}");
