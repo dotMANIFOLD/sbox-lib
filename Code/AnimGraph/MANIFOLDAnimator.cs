@@ -22,25 +22,39 @@ namespace MANIFOLD.AnimGraph {
         private OrderedJobGroup mainGroup;
         private ApplyToModelJob applyJob;
         
+        /// <summary>
+        /// Model to animate.
+        /// <remarks>Automatically rebinds.</remarks>
+        /// </summary>
         [Property]
         public SkinnedModelRenderer Renderer {
             get => renderer;
             set {
+                if (renderer == value) return;
                 renderer = value;
                 Bind();
             }
         }
 
+        /// <summary>
+        /// AnimGraph to use.
+        /// <remarks>Automatically rebuilds and rebinds.</remarks>
+        /// </summary>
         [Property]
         public AnimGraph AnimGraph {
             get => graph;
             set {
+                if (graph == value) return;
                 graph = value;
                 mainGroup = null;
                 applyJob = null;
             }
         }
 
+        /// <summary>
+        /// Animations to use.
+        /// <remarks>This doesn't have to match the AnimGraph default.</remarks>
+        /// </summary>
         [Property]
         public AnimationCollection Animations {
             get => animations;
@@ -61,12 +75,16 @@ namespace MANIFOLD.AnimGraph {
         }
 
         protected override void OnUpdate() {
+            // TODO: move updating to the scene system
             if (isPlaying) {
                 Update(Time.Delta);
             }
         }
 
         // PLAYING MANAGEMENT
+        /// <summary>
+        /// Starts playing animations.
+        /// </summary>
         public void Play() {
             if (graph == null || renderer == null) return;
             if (isPlaying) return;
@@ -77,11 +95,17 @@ namespace MANIFOLD.AnimGraph {
             context.time = 0;
         }
 
+        /// <summary>
+        /// Stops playing animations.
+        /// </summary>
         public void Stop() {
             isPlaying = false;
         }
 
         // COMMANDS
+        /// <summary>
+        /// Binds this animator to the model.
+        /// </summary>
         public void Bind() {
             if (mainGroup == null) return;
             bindData = new JobBindData(animations, renderer);
@@ -89,6 +113,10 @@ namespace MANIFOLD.AnimGraph {
             mainGroup.SetAnimContext(context);
         }
         
+        /// <summary>
+        /// Update the animator by <c>deltaTime</c>.
+        /// </summary>
+        /// <param name="deltaTime">Time passed</param>
         public void Update(float deltaTime) {
             if (graph == null || renderer == null) return;
             
@@ -104,9 +132,11 @@ namespace MANIFOLD.AnimGraph {
                 mainGroup.Run();
             }
         }
-
-        // UTILITY
-        private void RebuildGraph() {
+        
+        /// <summary>
+        /// Rebuilds the underlying job graph. Shouldn't have to be called unless the AnimGraph was modified.
+        /// </summary>
+        public void RebuildGraph() {
             mainGroup = new OrderedJobGroup();
 
             var jobs = graph.Nodes.Values.Select(x => x.CreateJob()).ToDictionary(x => x.ID);

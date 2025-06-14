@@ -12,7 +12,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         
         private Preview preview;
         private Inspector inspector;
-        private ParameterList parameterList;
+        private ParameterTable parameterTable;
         private TagList tagList;
         private AnimGraphView graphView;
         
@@ -52,8 +52,10 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             GraphAsset = asset;
             GraphResource = GraphAsset.LoadResource<AnimGraph>();
+            
             graphView.Graph = new GraphWrapper(GraphResource);
             statusBar.Graph = GraphResource;
+            parameterTable.Graph = GraphResource;
             preview.Graph = GraphResource;
             
             Focus();
@@ -87,7 +89,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
             preview = new Preview();
             inspector = new Inspector();
-            parameterList = new ParameterList();
+            parameterTable = new ParameterTable();
             tagList = new TagList();
             graphView = new AnimGraphView(this);
             
@@ -96,16 +98,16 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             dock.RegisterDockType("Preview", null, () => preview = new Preview());
             dock.RegisterDockType("Inspector", null, () => inspector = new Inspector());
-            dock.RegisterDockType("ParameterList", null, () => parameterList = new ParameterList());
+            dock.RegisterDockType("ParameterList", null, () => parameterTable = new ParameterTable());
             dock.RegisterDockType("TagList", null, () => tagList = new TagList());
             
             dock.AddDock(null, graphView, DockArea.Right, DockManager.DockProperty.HideCloseButton);
             dock.AddDock(graphView, preview, DockArea.Left, DockManager.DockProperty.HideOnClose, split: 0.2f);
             dock.AddDock(graphView, inspector, DockArea.Right, DockManager.DockProperty.HideOnClose, split: 0.2f);
-            dock.AddDock(preview, parameterList, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
-            dock.AddDock(parameterList, tagList, DockArea.Inside, DockManager.DockProperty.HideOnClose);
+            dock.AddDock(preview, parameterTable, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
+            dock.AddDock(parameterTable, tagList, DockArea.Inside, DockManager.DockProperty.HideOnClose);
 
-            dock.RaiseDock(parameterList);
+            dock.RaiseDock(parameterTable);
             
             dock.Update();
         }

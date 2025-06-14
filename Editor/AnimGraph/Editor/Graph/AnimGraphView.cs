@@ -12,6 +12,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             availableNodes = TypeLibrary
                 .GetTypesWithAttribute<ExposeToAnimGraphAttribute>()
+                .Where(x => x.Type.TargetType.IsAssignableTo(typeof(JobNode)))
                 .Select(x => (INodeType)new ClassNodeType(x.Type))
                 .ToList();
         }

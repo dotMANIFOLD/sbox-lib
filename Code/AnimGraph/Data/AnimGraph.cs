@@ -16,6 +16,8 @@ namespace MANIFOLD.AnimGraph {
         public AnimationCollection Collection { get; set; }
         [WideMode, ReadOnly, JsonIgnore]
         public Dictionary<Guid, JobNode> Nodes { get; set; }
+        [WideMode, ReadOnly, JsonIgnore]
+        public Dictionary<Guid, Parameter> Parameters { get; set; }
         
         [Hide]
         public JsonArray SerializedNodes {
@@ -34,11 +36,32 @@ namespace MANIFOLD.AnimGraph {
                     var type = Json.FromNode<Type>(node[TYPE_FIELD]);
                     var deserialized = (JobNode)Json.Deserialize(node.ToString(), type);
                     deserialized.Graph = this;
-                    Nodes.Add((Guid)node[nameof(JobNode.ID)], deserialized);
+                    Nodes.Add(deserialized.ID, deserialized);
                 }
             }
         }
-
+        
+        [Hide]
+        public JsonArray SerializedParameters {
+            get {
+                JsonArray arr = new JsonArray();
+                foreach (var param in Parameters.Values) {
+                    var jsonNode = Json.ToNode(param);
+                    jsonNode[TYPE_FIELD] = Json.ToNode(param.GetType(), typeof(Type));
+                    arr.Add(jsonNode);
+                }
+                return arr;
+            }
+            set {
+                Parameters.Clear();
+                foreach (var node in value) {
+                    var type = Json.FromNode<Type>(node[TYPE_FIELD]);
+                    var deserialized = (Parameter)Json.Deserialize(node.ToString(), type);
+                    Parameters.Add(deserialized.ID, deserialized);
+                }
+            }
+        }
+        
         [JsonIgnore, Hide]
         public FinalPose FinalPoseNode => (FinalPose)Nodes[Guid.AllBitsSet];
         
@@ -50,6 +73,7 @@ namespace MANIFOLD.AnimGraph {
         
         public AnimGraph() {
             Nodes = new Dictionary<Guid, JobNode>();
+            Parameters = new Dictionary<Guid, Parameter>();
             Nodes.Add(Guid.AllBitsSet, new FinalPose());
         }
         

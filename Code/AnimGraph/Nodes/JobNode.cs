@@ -17,6 +17,10 @@ namespace MANIFOLD.AnimGraph {
         public const string MODIFIER = "Modifier";
         public const string MODIFIER_COLOR = "#ee8013";
     }
+
+    public class JobCreationContext {
+        public ParameterList parameters;
+    }
     
     public abstract class JobNode : BaseNode {
         [JsonIgnore]
