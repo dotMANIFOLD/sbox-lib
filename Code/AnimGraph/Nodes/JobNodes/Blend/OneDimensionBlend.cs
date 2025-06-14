@@ -9,13 +9,13 @@ namespace MANIFOLD.AnimGraph.Nodes {
     [Category(JobCategories.BLEND)]
     [ExposeToAnimGraph]
     public class OneDimensionBlend : JobNode {
-        public class BlendPoint : INodeReferenceProvider {
-            public NodeReference Input { get; set; } = new NodeReference(null);
+        public class BlendPoint : INodeRefProvider {
+            public NodeRef Input { get; set; } = new NodeRef(null);
             public string Name { get; set; } = "Unnamed";
             public float Value { get; set; }
             
             [JsonIgnore, Hide]
-            NodeReference INodeReferenceProvider.Reference => Input;
+            NodeRef INodeRefProvider.Reference => Input;
         }
         
         [Input, WideMode, InlineEditor]
@@ -30,7 +30,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
             throw new System.NotImplementedException();
         }
 
-        public override IEnumerable<NodeReference> GetInputs() {
+        public override IEnumerable<NodeRef> GetInputs() {
             throw new System.NotImplementedException();
         }
     }

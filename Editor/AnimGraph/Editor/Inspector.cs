@@ -49,7 +49,20 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             var sheet = new ControlSheet();
             sheet.AddObject(serialized);
+            ShowSheet(sheet);
+        }
+
+        public void SetParameter(Parameter parameter) {
+            Layout.Clear(true);
             
+            serialized = EditorTypeLibrary.GetSerializedObject(parameter);
+
+            var sheet = new ControlSheet();
+            sheet.AddObject(serialized);
+            ShowSheet(sheet);
+        }
+
+        private void ShowSheet(ControlSheet sheet) {
             var scroll = new ScrollArea(this);
             scroll.Canvas = new Widget();
             scroll.Canvas.Layout = Layout.Column();
@@ -75,7 +88,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             if (!property.HasAttribute<InputAttribute>()) return;
             
             Type type = property.PropertyType;
-            bool validType = type.IsAssignableTo(typeof(IEnumerable<NodeReference>)) || type.IsAssignableTo(typeof(IEnumerable<INodeReferenceProvider>));
+            bool validType = type.IsAssignableTo(typeof(IEnumerable<NodeRef>)) || type.IsAssignableTo(typeof(IEnumerable<INodeRefProvider>));
             if (!validType) return;
             
             changingCollection = true;

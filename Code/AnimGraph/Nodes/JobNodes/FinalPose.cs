@@ -10,7 +10,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
     /// </summary>
     public sealed class FinalPose : JobNode {
         [Input]
-        public NodeReference Pose { get; set; }
+        public NodeRef Pose { get; set; }
         
         [JsonIgnore, Hide]
         public override string DisplayName => "Final Pose";
@@ -25,7 +25,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
             return new ApplyToModelJob();
         }
 
-        public override IEnumerable<NodeReference> GetInputs() {
+        public override IEnumerable<NodeRef> GetInputs() {
             return [Pose];
         }
     }

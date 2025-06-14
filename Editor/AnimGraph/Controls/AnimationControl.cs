@@ -8,7 +8,12 @@ namespace MANIFOLD.AnimGraph.Editor {
         public AnimationControl(SerializedProperty property) : base(property) {
             Layout = Layout.Row();
 
-            var node = (JobNode)property.Parent.Targets.First();
+            var node = property.Parent.Targets.First() as JobNode;
+            if (node == null) {
+                Layout.Add(new Label("Parent Object is not a node!", this));
+                return;
+            }
+            
             var currentValue = property.GetValue<string>();
             
             var comboBox = new ComboBox(this);

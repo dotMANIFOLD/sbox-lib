@@ -18,7 +18,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
             throw new System.NotImplementedException();
         }
 
-        public override IEnumerable<NodeReference> GetInputs() {
+        public override IEnumerable<NodeRef> GetInputs() {
             throw new System.NotImplementedException();
         }
     }

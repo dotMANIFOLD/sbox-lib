@@ -49,7 +49,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
     public class GraphPlugIn : GraphPlug, IPlugIn {
         private DisplayInfo displayInfo;
-        private NodeReference reference;
+        private NodeRef reference;
         
         public override string Identifier => $"{Node.Identifier}.In.{PlugIndex}";
         public override DisplayInfo DisplayInfo => displayInfo;
@@ -66,7 +66,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             }
         }
 
-        public GraphPlugIn(GraphNode node, int plugIndex, NodeReference reference, DisplayInfo info) : base(node, plugIndex) {
+        public GraphPlugIn(GraphNode node, int plugIndex, NodeRef reference, DisplayInfo info) : base(node, plugIndex) {
             this.reference = reference;
             this.displayInfo = info;
         }
@@ -95,7 +95,7 @@ namespace MANIFOLD.AnimGraph.Editor {
     public class GraphNode : INode {
         public enum InputOrigin { Property, Collection }
         
-        public record InputData(InputOrigin Origin, NodeReference Reference, DisplayInfo Info);
+        public record InputData(InputOrigin Origin, NodeRef Reference, DisplayInfo Info);
         
         protected GraphWrapper graph;
         protected JobNodeUI ui;
@@ -201,9 +201,9 @@ namespace MANIFOLD.AnimGraph.Editor {
             foreach (var prop in type.GetProperties()) {
                 if (prop.GetCustomAttribute<InputAttribute>() == null) continue;
                 
-                if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<NodeReference>))) {
+                if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<NodeRef>))) {
                     // collection of references
-                    var col = (IEnumerable<NodeReference>)prop.GetValue(realNode);
+                    var col = (IEnumerable<NodeRef>)prop.GetValue(realNode);
                     if (col == null) continue;
                     
                     int count = 0;
@@ -215,9 +215,9 @@ namespace MANIFOLD.AnimGraph.Editor {
                         inputs.Add(new InputData(InputOrigin.Collection, reference, info));
                         count++;
                     }
-                } else if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<INodeReferenceProvider>))) {
+                } else if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<INodeRefProvider>))) {
                     // collection of providers
-                    var col = (IEnumerable<INodeReferenceProvider>)prop.GetValue(realNode);
+                    var col = (IEnumerable<INodeRefProvider>)prop.GetValue(realNode);
                     if (col == null) continue;
 
                     int count = 0;
@@ -229,15 +229,15 @@ namespace MANIFOLD.AnimGraph.Editor {
                         inputs.Add(new InputData(InputOrigin.Collection, provider.Reference, info));
                         count++;
                     }
-                } else if (prop.PropertyType.IsAssignableTo(typeof(NodeReference))) {
+                } else if (prop.PropertyType.IsAssignableTo(typeof(NodeRef))) {
                     // reference
-                    var reference = (NodeReference)prop.GetValue(realNode);
+                    var reference = (NodeRef)prop.GetValue(realNode);
                     if (!reference.IsValid()) continue;
                     
                     inputs.Add(new InputData(InputOrigin.Property, reference, DisplayInfo.ForMember(prop)));
-                } else if (prop.PropertyType.IsAssignableTo(typeof(INodeReferenceProvider))) {
+                } else if (prop.PropertyType.IsAssignableTo(typeof(INodeRefProvider))) {
                     // provider
-                    var provider = (INodeReferenceProvider)prop.GetValue(realNode);
+                    var provider = (INodeRefProvider)prop.GetValue(realNode);
                     if (provider == null) continue;
                     
                     inputs.Add(new InputData(InputOrigin.Property, provider.Reference, DisplayInfo.ForMember(prop)));

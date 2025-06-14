@@ -1,23 +1,18 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using MANIFOLD.Animation;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Nodes {
-    /// <summary>
-    /// Adds one pose onto another.
-    /// </summary>
-    [Category(JobCategories.MODIFIER)]
+    [Category(JobCategories.SAMPLING)]
     [ExposeToAnimGraph]
-    public class Add : JobNode {
-        [Input]
-        public NodeRef Base { get; set; }
-        [Input]
-        public NodeRef Additive { get; set; }
-        
+    public class AnimGraphSampler : JobNode {
+        public ParameterRef<AnimGraph> Parameter { get; set; } = new();
+
         [JsonIgnore, Hide]
-        public override string DisplayName => "Add";
+        public override string DisplayName => "Sample Anim Graph";
         [JsonIgnore, Hide]
-        public override Color AccentColor => JobCategories.MODIFIER_COLOR;
+        public override Color AccentColor => AnimationCollection.BG_COLOR;
         
         public override IBaseAnimJob CreateJob() {
             throw new System.NotImplementedException();

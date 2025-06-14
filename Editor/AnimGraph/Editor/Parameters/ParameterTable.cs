@@ -11,6 +11,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         private AnimGraph graph;
 
         private Widget parameterArea;
+        private List<ParameterWidget> parameters;
+        private ParameterWidget selectedParameter;
         
         public AnimGraph Graph {
             get => graph;
@@ -19,6 +21,8 @@ namespace MANIFOLD.AnimGraph.Editor {
                 Refresh();
             }
         }
+        
+        public Action<Parameter> OnParameterSelected { get; set; }
         
         public ParameterTable() {
             Name = "ParameterList";
@@ -39,6 +43,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             Layout.Add(bar);
 
             var scroll = new ScrollArea(this);
+            parameters = new List<ParameterWidget>();
             parameterArea = scroll.Canvas = new Widget(scroll);
             parameterArea.Layout = Layout.Column();
             parameterArea.SetSizeMode(SizeMode.Flexible, SizeMode.CanGrow);
@@ -48,15 +53,38 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         public void Refresh() {
             parameterArea.Layout.Clear(true);
+            parameters.Clear();
 
             foreach (var param in graph.Parameters.Values) {
                 var widget = new ParameterWidget(parameterArea);
                 widget.Parameter = param;
+                widget.OnSelected += ParameterSelectCallback;
                 parameterArea.Layout.Add(widget);
+                parameters.Add(widget);
             }
             parameterArea.Layout.AddStretchCell();
+            
         }
 
+        public void ClearSelection() {
+            foreach (var widget in parameters) {
+                widget.Selected = false;
+                widget.Update();
+            }
+        }
+
+        private void ParameterSelectCallback(ParameterWidget widget) {
+            if (widget == selectedParameter) return;
+            if (selectedParameter != null) {
+                selectedParameter.Selected = false;
+                selectedParameter.Update();
+            }
+            selectedParameter = widget;
+            selectedParameter.Update();
+            
+            OnParameterSelected?.Invoke(selectedParameter.Parameter);
+        }
+        
         private void ShowAddMenu() {
             ContextMenu menu = new ContextMenu(this);
 

@@ -15,6 +15,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         private ParameterTable parameterTable;
         private TagList tagList;
         private AnimGraphView graphView;
+
+        private bool ignoreSelection;
         
         public Asset GraphAsset { get; set; }
         public AnimGraph GraphResource { get; set; }
@@ -94,7 +96,8 @@ namespace MANIFOLD.AnimGraph.Editor {
             graphView = new AnimGraphView(this);
             
             inspector.OnInputChanged += OnPropertyChanged;
-            graphView.OnSelectionChanged += OnSelectionChanged;
+            parameterTable.OnParameterSelected += OnParameterSelected;
+            graphView.OnSelectionChanged += OnNodeSelectionChanged;
             
             dock.RegisterDockType("Preview", null, () => preview = new Preview());
             dock.RegisterDockType("Inspector", null, () => inspector = new Inspector());
@@ -112,8 +115,18 @@ namespace MANIFOLD.AnimGraph.Editor {
             dock.Update();
         }
 
-        private void OnSelectionChanged() {
+        // CHANGES
+        private void OnNodeSelectionChanged() {
+            if (ignoreSelection) {
+                ignoreSelection = false;
+                return;
+            }
+            
             inspector.SetNodes(graphView.SelectedItems.Cast<NodeUI>().Select(x => x.Node).Cast<GraphNode>());
+        }
+
+        private void OnParameterSelected(Parameter parameter) {
+            inspector.SetParameter(parameter);
         }
 
         private void OnPropertyChanged() {
