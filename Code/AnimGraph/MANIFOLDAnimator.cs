@@ -1,13 +1,10 @@
 ﻿using System.Linq;
-using System.Text.Json.Serialization;
 using MANIFOLD.Animation;
 using MANIFOLD.Jobs;
 using Sandbox;
 using Sandbox.Diagnostics;
 
 namespace MANIFOLD.AnimGraph {
-    using Nodes;
-    
     [Title("MANIFOLD Animator")]
     [Category(LibraryData.CATEGORY)]
     public class MANIFOLDAnimator : Component, Component.ExecuteInEditor {
@@ -18,6 +15,7 @@ namespace MANIFOLD.AnimGraph {
         private bool isPlaying;
         private JobBindData bindData;
         private JobContext context;
+        private ParameterList parameters;
         
         private OrderedJobGroup mainGroup;
         private ApplyToModelJob applyJob;
@@ -48,6 +46,7 @@ namespace MANIFOLD.AnimGraph {
                 graph = value;
                 mainGroup = null;
                 applyJob = null;
+                parameters = null;
             }
         }
 
@@ -63,6 +62,13 @@ namespace MANIFOLD.AnimGraph {
                 Bind();
             }
         }
+        
+        /// <summary>
+        /// Access to this animator's parameters.
+        /// </summary>
+        public ParameterList Parameters => parameters;
+        
+        public bool IsPlaying => isPlaying;
 
         protected override void OnEnabled() {
             if (Scene.IsEditor) return;
@@ -114,13 +120,16 @@ namespace MANIFOLD.AnimGraph {
         }
         
         /// <summary>
-        /// Update the animator by <c>deltaTime</c>.
+        /// Update the animator by <paramref name="deltaTime"/>
         /// </summary>
         /// <param name="deltaTime">Time passed</param>
         public void Update(float deltaTime) {
             if (graph == null || renderer == null) return;
             
             if (mainGroup == null) {
+                if (parameters == null) {
+                    RebuildParameters();
+                }
                 RebuildGraph();
             }
             
@@ -130,6 +139,7 @@ namespace MANIFOLD.AnimGraph {
             using (Performance.Scope("Animation")) {
                 applyJob.TraverseLeft<IBaseAnimJob, IInputAnimJob>(PrepareTraverse);
                 mainGroup.Run();
+                parameters.Reset(true);
             }
         }
         
@@ -137,9 +147,13 @@ namespace MANIFOLD.AnimGraph {
         /// Rebuilds the underlying job graph. Shouldn't have to be called unless the AnimGraph was modified.
         /// </summary>
         public void RebuildGraph() {
+            if (graph == null) return;
+            
             mainGroup = new OrderedJobGroup();
 
-            var jobs = graph.Nodes.Values.Select(x => x.CreateJob()).ToDictionary(x => x.ID);
+            JobCreationContext ctx = new JobCreationContext();
+            ctx.parameters = parameters;
+            var jobs = graph.Nodes.Values.Select(x => x.CreateJob(ctx)).ToDictionary(x => x.ID);
             
             applyJob = (ApplyToModelJob)jobs.First(x => x.Value is ApplyToModelJob).Value;
             applyJob.SetGraph(mainGroup);
@@ -174,6 +188,15 @@ namespace MANIFOLD.AnimGraph {
             }
 
             Bind();
+        }
+
+        /// <summary>
+        /// Rebuilds the underlying parameter list. Shouldn't have to be called unless the AnimGraph's parameters was modified.
+        /// </summary>
+        public void RebuildParameters() {
+            if (graph == null) return;
+            parameters = new ParameterList(graph);
+            parameters.Reset();
         }
         
         private void PrepareTraverse(IBaseAnimJob job) {

@@ -7,20 +7,18 @@ using Sandbox;
 
 namespace MANIFOLD.AnimGraph {
     public class SampleJob : IOutputAnimJob {
-        public class TrackGroup {
+        private class TrackGroup {
             public Track<Vector3> position;
             public Track<Rotation> rotation;
         }
         
-        public string animationName;
-
-        public float playbackSpeed = 1;
-        public bool looping;
-        public float time;
-
+        private string animationName;
+        private AnimationClip animation;
+        
+        private Parameter<float> speedParameter;
+        private float playbackSpeed = 1;
         internal float graphPlaybackSpeed = 1;
         
-        private AnimationClip animation;
         private SkeletonData<TrackGroup> trackCache;
         private Pose cachedPose;
         private List<Output<JobResults>> outputs = new List<Output<JobResults>>();
@@ -31,14 +29,41 @@ namespace MANIFOLD.AnimGraph {
         public JobContext Context { get; set; }
         public JobBindData BindData { get; set; }
 
+        public string Animation {
+            get => animationName;
+            set {
+                animationName = value;
+                CacheAnimation();
+            }
+        }
+
+        public float PlaybackSpeed {
+            get => PlaybackSpeedParameter?.Value ?? playbackSpeed;
+            set {
+                playbackSpeed = value;
+                speedParameter = null;
+            }
+        }
+        public Parameter<float> PlaybackSpeedParameter {
+            get => speedParameter;
+            set {
+                if (speedParameter != null && value == null) {
+                    playbackSpeed = speedParameter.Value;
+                }
+                speedParameter = value;
+            }
+        }
+        public bool Looping { get; set; }
+        public float Time { get; set; }
+        
         public IReadOnlyList<Output<JobResults>> Outputs => outputs;
         IReadOnlyList<IOutputSocket> IOutputJob.Outputs => outputs;
         
         public JobResults OutputData { get; private set; }
         object IOutputJob.OutputData => OutputData;
 
-        public float RealPlaybackSpeed => playbackSpeed * graphPlaybackSpeed;
-        public float Duration => animation.Duration * (1 / playbackSpeed);
+        public float RealPlaybackSpeed => PlaybackSpeed * graphPlaybackSpeed;
+        public float Duration => animation.Duration * (1 / PlaybackSpeed);
         public float RealDuration => animation.Duration * (1 / RealPlaybackSpeed);
         
         public SampleJob() : this(Guid.NewGuid()) { }
@@ -48,27 +73,15 @@ namespace MANIFOLD.AnimGraph {
         }
         
         public void Bind() {
-            animation = BindData.animations.Animations.FirstOrDefault(x => x.Name == animationName);
             trackCache = new SkeletonData<TrackGroup>(BindData.remapTable);
             cachedPose = BindData.bindPose.Clone();
             OutputData = new JobResults(cachedPose);
 
-            if (animation == null) return;
-            
-            var trackGroups = animation.Tracks.GroupBy(x => x.TargetBone);
-            foreach (var tracks in trackGroups) {
-                if (!BindData.remapTable.TryGetValue(tracks.Key, out int index)) continue;
-
-                TrackGroup group = new TrackGroup();
-                trackCache[index] = group;
-                
-                group.position = (Track<Vector3>)tracks.FirstOrDefault(x => x.Name == "LocalPosition");
-                group.rotation = (Track<Rotation>)tracks.FirstOrDefault(x => x.Name == "LocalRotation");
-            }
+            CacheAnimation();
         }
         
         public void Reset() {
-            time = 0;
+            Time = 0;
         }
 
         public void Prepare() {
@@ -76,10 +89,10 @@ namespace MANIFOLD.AnimGraph {
         }
         
         public void Run() {
-            if (animation == null) return;
+            if (animation == null || trackCache == null) return;
             
             float interval = (1 / animation.FrameRate);
-            int frame = (time / (1 / animation.FrameRate)).FloorToInt();
+            int frame = (Time / (1 / animation.FrameRate)).FloorToInt();
 
             for (int i = 0; i < BindData.bindPose.BoneCount; i++) {
                 Transform transform = BindData.bindPose[i];
@@ -94,17 +107,35 @@ namespace MANIFOLD.AnimGraph {
                 
                 cachedPose[i] = transform;
             }
-            time += Context.deltaTime * RealPlaybackSpeed;
+            Time += Context.deltaTime * RealPlaybackSpeed;
             
-            if (looping) {
+            if (Looping) {
                 float duration = animation.FrameCount * interval;
-                if (duration < time) {
-                    float mult = (time / duration).Floor();
-                    time -= duration * mult;
+                if (duration < Time) {
+                    float mult = (Time / duration).Floor();
+                    Time -= duration * mult;
                 }
             }
         }
 
+        private void CacheAnimation() {
+            if (trackCache == null) return;
+            
+            animation = BindData.animations.Animations.FirstOrDefault(x => x.Name == animationName);
+            if (animation == null) return;
+            
+            var trackGroups = animation.Tracks.GroupBy(x => x.TargetBone);
+            foreach (var tracks in trackGroups) {
+                if (!BindData.remapTable.TryGetValue(tracks.Key, out int index)) continue;
+
+                TrackGroup group = new TrackGroup();
+                trackCache[index] = group;
+                
+                group.position = (Track<Vector3>)tracks.FirstOrDefault(x => x.Name == "LocalPosition");
+                group.rotation = (Track<Rotation>)tracks.FirstOrDefault(x => x.Name == "LocalRotation");
+            }
+        }
+        
         // OUTPUT API
         public void AddOutput(IInputJob<JobResults> job, int targetIndex) {
             outputs.Add(new Output<JobResults>(job, targetIndex));

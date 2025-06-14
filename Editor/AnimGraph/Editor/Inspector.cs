@@ -58,7 +58,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             serialized = EditorTypeLibrary.GetSerializedObject(parameter);
 
             var sheet = new ControlSheet();
-            sheet.AddObject(serialized);
+            sheet.AddObject(serialized, (prop) => prop.Name != "Value" && prop.Name != "backingField");
             ShowSheet(sheet);
         }
 

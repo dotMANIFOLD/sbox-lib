@@ -26,12 +26,16 @@ namespace MANIFOLD.AnimGraph.Nodes {
             
         }
         
-        public override IBaseAnimJob CreateJob() {
-            return new SampleJob(ID) {
-                animationName = Animation,
-                playbackSpeed = PlaybackSpeed,
-                looping = Looping
-            };
+        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
+            var job = new SampleJob(ID);
+            job.Animation = Animation;
+            if (PlaybackSpeedParameter.IsValid()) {
+                job.PlaybackSpeedParameter = ctx.parameters.Get<float>(PlaybackSpeedParameter.ID.Value);
+            } else {
+                job.PlaybackSpeed = PlaybackSpeed;
+            }
+            job.Looping = Looping;
+            return job;
         }
 
         public override IEnumerable<NodeRef> GetInputs() {

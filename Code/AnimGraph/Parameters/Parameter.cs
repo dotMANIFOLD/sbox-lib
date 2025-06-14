@@ -16,11 +16,11 @@ namespace MANIFOLD.AnimGraph {
     }
 
     public class Parameter<T> : Parameter {
-        private T backingField;
+        protected T backingField;
         
         public T DefaultValue { get; set; }
         
-        [Hide, JsonIgnore]
+        [JsonIgnore]
         public T Value {
             get => backingField;
             set {

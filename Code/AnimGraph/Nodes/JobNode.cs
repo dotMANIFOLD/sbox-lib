@@ -26,7 +26,7 @@ namespace MANIFOLD.AnimGraph {
         [JsonIgnore]
         public abstract Color AccentColor { get; }
         
-        public abstract IBaseAnimJob CreateJob();
+        public abstract IBaseAnimJob CreateJob(in JobCreationContext ctx);
         public abstract IEnumerable<NodeRef> GetInputs();
     }
 }

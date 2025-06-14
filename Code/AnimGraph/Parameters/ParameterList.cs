@@ -1,8 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 namespace MANIFOLD.AnimGraph {
-    public class ParameterList {
+    public class ParameterList : IEnumerable<Parameter> {
         private Dictionary<Guid, Parameter> parameters;
         private Dictionary<string, Parameter> parametersByName;
         
@@ -78,6 +79,13 @@ namespace MANIFOLD.AnimGraph {
             if (param == null) return;
             param.Value = value;
         }
+
+        public void Reset(bool autoOnly = false) {
+            foreach (var param in parameters.Values) {
+                if (autoOnly && !param.AutoReset) continue;
+                param.Reset();
+            }
+        }
         
         public ParameterList Clone() {
             var clone = new ParameterList();
@@ -85,6 +93,14 @@ namespace MANIFOLD.AnimGraph {
                 clone.Add(parameter.Clone());
             }
             return clone;
+        }
+
+        public IEnumerator<Parameter> GetEnumerator() {
+            return parameters.Values.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
     }
 }

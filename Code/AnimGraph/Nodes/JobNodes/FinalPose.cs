@@ -21,7 +21,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
             ID = Guid.AllBitsSet;
         }
 
-        public override IBaseAnimJob CreateJob() {
+        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
             return new ApplyToModelJob();
         }
 

@@ -14,7 +14,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [JsonIgnore, Hide]
         public override Color AccentColor => AnimationCollection.BG_COLOR;
         
-        public override IBaseAnimJob CreateJob() {
+        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
             throw new System.NotImplementedException();
         }
 
