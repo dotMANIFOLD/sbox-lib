@@ -63,7 +63,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             var results = parameters.Select(x => x.GetSerialized().GetProperty("Value")).ToList();
             Log.Info($"parameter count: {results.Count}");
             
-            parameterSheet.AddPropertiesWithGrouping(results);
+            parameterSheet.AddGroup("thing?", results.ToArray());
             Update(); 
         }
     }
