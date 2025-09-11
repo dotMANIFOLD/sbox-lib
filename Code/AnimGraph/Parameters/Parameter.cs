@@ -18,10 +18,11 @@ namespace MANIFOLD.AnimGraph {
     public class Parameter<T> : Parameter {
         protected T backingField;
         
+        [Space]
         public T DefaultValue { get; set; }
         
         [JsonIgnore]
-        public T Value {
+        public virtual T Value {
             get => backingField;
             set {
                 backingField = value;

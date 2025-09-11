@@ -1,4 +1,5 @@
 ﻿using MANIFOLD.Animation;
+using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Parameters {
     [ExposeToAnimGraph(Color = "#2b5bcb")]
@@ -18,7 +19,24 @@ namespace MANIFOLD.AnimGraph.Parameters {
     [ExposeToAnimGraph(Color = "#afd61f")]
     [Title("Float")]
     public class FloatParameter : Parameter<float> {
-        public override Parameter Clone() {
+	    [Order(1000)]
+	    public bool HasRange { get; set; }
+		[Title("Minimum"), ShowIf(nameof(HasRange), true), Order(1001)]
+	    public float MinValue { get; set; }
+		[Title("Maximum"), ShowIf(nameof(HasRange), true), Order(1002)]
+	    public float MaxValue { get; set; }
+
+	    public override float Value {
+		    get => base.Value;
+		    set {
+			    if (HasRange) {
+                    value = value.Clamp(MinValue, MaxValue);
+                }
+                base.Value = value;
+		    }
+	    }
+
+	    public override Parameter Clone() {
             return new FloatParameter() {
                 ID = ID,
                 Name = Name,
