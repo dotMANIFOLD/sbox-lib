@@ -10,7 +10,12 @@ namespace MANIFOLD.Animation {
         private static void OnModelAssetContext(AssetContextMenu evt) {
             if (evt.SelectedList.Any(x => x.AssetType != AssetType.Model)) return;
 
-            evt.Menu.AddOption("Extract animations...", "directions_run", () => {
+            var subMenu = evt.Menu.FindOrCreateMenu("Animation");
+            subMenu.Icon = "animation";
+            
+            subMenu.AddOption("Extract single animation", "animation");
+            subMenu.AddOption("Create graph resources", "list_alt");
+            subMenu.AddOption("Extract animations", "directions_run", () => {
                 ExtractManyAnimations(evt.SelectedList);
             });
             evt.Menu.AddSeparator();

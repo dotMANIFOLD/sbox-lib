@@ -12,7 +12,7 @@ namespace MANIFOLD.AnimGraph {
     public class MANIFOLDAnimator : Component, Component.ExecuteInEditor {
         private SkinnedModelRenderer renderer;
         private AnimGraph graph;
-        private AnimationCollection animations;
+        private AnimGraphResources animations;
         
         private bool isPlaying;
         private JobBindData bindData;
@@ -57,7 +57,7 @@ namespace MANIFOLD.AnimGraph {
         /// <remarks>This doesn't have to match the AnimGraph default.</remarks>
         /// </summary>
         [Property]
-        public AnimationCollection Animations {
+        public AnimGraphResources Animations {
             get => animations;
             set {
                 animations = value;

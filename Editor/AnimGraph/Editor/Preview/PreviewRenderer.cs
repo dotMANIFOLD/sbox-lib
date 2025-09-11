@@ -13,8 +13,8 @@ namespace MANIFOLD.AnimGraph.Editor {
             get => graph;
             set {
                 graph = value;
-                animator.Animations = graph.Collection;
-                model.Model = graph.Collection.Model;
+                animator.Animations = graph.Resources;
+                model.Model = graph.Resources.Model;
             }
         }
         

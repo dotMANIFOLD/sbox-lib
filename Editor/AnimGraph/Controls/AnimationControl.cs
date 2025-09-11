@@ -18,7 +18,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             var comboBox = new ComboBox(this);
             comboBox.AddItem("<None>", onSelected: () => property.SetValue((string)null), selected: currentValue == null);
-            foreach (var anim in node.Graph.Collection.Animations) {
+            foreach (var anim in node.Graph.Resources.Animations) {
                 comboBox.AddItem(anim.Name, onSelected: () => property.SetValue(anim.Name), selected: anim.Name == currentValue);
             }
             

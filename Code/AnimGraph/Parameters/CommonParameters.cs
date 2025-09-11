@@ -88,7 +88,7 @@ namespace MANIFOLD.AnimGraph.Parameters {
         }
     }
 
-    [ExposeToAnimGraph(Color = AnimationCollection.BG_COLOR)]
+    [ExposeToAnimGraph(Color = ModuleData.BG_COLOR)]
     public class AnimGraphParameter : Parameter<AnimGraph> {
         public override Parameter Clone() {
             return new AnimGraphParameter() {

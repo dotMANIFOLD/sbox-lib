@@ -54,7 +54,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             }
             
             var obj = EditorTypeLibrary.GetSerializedObject(graph);
-            var prop = obj.GetProperty(nameof(AnimGraph.Collection));
+            var prop = obj.GetProperty(nameof(AnimGraph.Resources));
 
             collectionWidget = ControlWidget.Create(prop);
             labelColumn.Add(collectionWidget);

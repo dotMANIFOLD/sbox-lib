@@ -3,63 +3,37 @@ using System.Collections.Generic;
 using System.Text.Json.Nodes;
 using System.Text.Json.Serialization;
 using MANIFOLD.Animation;
+using MANIFOLD.Utility;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph {
     using Nodes;
     
-    [GameResource("Animation Graph", EXTENSION, "Graph to animate a model", Category = LibraryData.CATEGORY, Icon = "account_tree", IconBgColor = AnimationCollection.BG_COLOR)]
+    [AssetType(Name = "Animation Graph", Category = ModuleData.CATEGORY, Extension = EXTENSION)]
     public class AnimGraph : GameResource {
-        public const string EXTENSION = "manmgrph";
+        public const string EXTENSION = ModuleData.EXT_PREFIX + "ph";
         public const string TYPE_FIELD = "_type";
         
-        public AnimationCollection Collection { get; set; }
+        public AnimGraphResources Resources { get; set; }
         [WideMode, ReadOnly, JsonIgnore]
         public Dictionary<Guid, JobNode> Nodes { get; set; }
         [WideMode, ReadOnly, JsonIgnore]
         public Dictionary<Guid, Parameter> Parameters { get; set; }
         
         [Hide]
-        public JsonArray SerializedNodes {
-            get {
-                JsonArray arr = new JsonArray();
-                foreach (var node in Nodes.Values) {
-                    var jsonNode = Json.ToNode(node);
-                    jsonNode[TYPE_FIELD] = Json.ToNode(node.GetType(), typeof(Type));
-                    arr.Add(jsonNode);
-                }
-                return arr;
-            }
+        public JsonObject SerializedNodes {
+            get => Nodes.SerializePolymorphic();
             set {
-                Nodes.Clear();
-                foreach (var node in value) {
-                    var type = Json.FromNode<Type>(node[TYPE_FIELD]);
-                    var deserialized = (JobNode)Json.Deserialize(node.ToString(), type);
-                    deserialized.Graph = this;
-                    Nodes.Add(deserialized.ID, deserialized);
-                }
+                Nodes = value.DeserializePolymorphic<Guid, JobNode>((_, node) => {
+                    node.Graph = this;
+                });
             }
         }
         
         [Hide]
-        public JsonArray SerializedParameters {
-            get {
-                JsonArray arr = new JsonArray();
-                foreach (var param in Parameters.Values) {
-                    var jsonNode = Json.ToNode(param);
-                    jsonNode[TYPE_FIELD] = Json.ToNode(param.GetType(), typeof(Type));
-                    arr.Add(jsonNode);
-                }
-                return arr;
-            }
-            set {
-                Parameters.Clear();
-                foreach (var node in value) {
-                    var type = Json.FromNode<Type>(node[TYPE_FIELD]);
-                    var deserialized = (Parameter)Json.Deserialize(node.ToString(), type);
-                    Parameters.Add(deserialized.ID, deserialized);
-                }
-            }
+        public JsonObject SerializedParameters {
+            get => Parameters.SerializePolymorphic();
+            set => Parameters = value.DeserializePolymorphic<Guid, Parameter>();
         }
         
         [JsonIgnore, Hide]
@@ -93,6 +67,10 @@ namespace MANIFOLD.AnimGraph {
 
         public void RemoveNode(Guid id) {
             Nodes.Remove(id);
+        }
+
+        protected override Bitmap CreateAssetTypeIcon(int width, int height) {
+            return CreateSimpleAssetTypeIcon("account_tree", width, height, ModuleData.BG_COLOR);
         }
     }
 }

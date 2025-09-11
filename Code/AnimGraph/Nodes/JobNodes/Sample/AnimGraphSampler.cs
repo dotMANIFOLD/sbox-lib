@@ -12,7 +12,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [JsonIgnore, Hide]
         public override string DisplayName => "Sample Anim Graph";
         [JsonIgnore, Hide]
-        public override Color AccentColor => AnimationCollection.BG_COLOR;
+        public override Color AccentColor => ModuleData.BG_COLOR;
         
         public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
             throw new System.NotImplementedException();
