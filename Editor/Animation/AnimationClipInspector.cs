@@ -16,7 +16,7 @@ namespace MANIFOLD.Animation.Editor {
 
                 Layout = grid;
 
-                var trackType = TypeLibrary.GetType(track.GetType()).BaseType.GenericArguments[0];
+                var trackType = track.GetType().BaseType.GenericTypeArguments[0];
                 
                 grid.AddCell(0, 0, new Label($"{track.Name} {(string.IsNullOrEmpty(track.TargetBone) ? "" : $"({track.TargetBone})")}"));
                 grid.AddCell(1, 0, new Label(trackType.Name));

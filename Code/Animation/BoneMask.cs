@@ -10,6 +10,7 @@ namespace MANIFOLD.Animation {
 		/// Model for the skeleton of this mask. Can be null.
 		/// </summary>
 		public Model Model { get; set; }
+		public string Name { get; set; }
 		public Dictionary<string, float> Weights { get; set; }
 
 		protected override Bitmap CreateAssetTypeIcon(int width, int height) {

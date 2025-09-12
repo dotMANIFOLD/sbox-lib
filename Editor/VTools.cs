@@ -9,8 +9,24 @@ using Editor;
 using Sandbox;
 using FileSystem = Editor.FileSystem;
 
-namespace MANIFOLD {
+namespace MANIFOLD.Editor {
     public static class VTools {
+        public class ExecutionInfo {
+            public string command;
+            public IReadOnlyList<string> arguments;
+            public CancellationToken token = CancellationToken.None;
+            
+            public bool showDialog = true;
+            public bool autoCloseDialog;
+        }
+        
+        public class ExecutionResult {
+            public List<string> logs = new List<string>();
+            public List<string> errors = new List<string>();
+            
+            public bool HadErrors => errors.Count > 0;
+        }
+        
         public const string GITHUB_LINK = "https://github.com/dotMANIFOLD/sbox-vtools";
         public const string DOWNLOAD_LINK = GITHUB_LINK + "/releases/latest/download/vtools.zip";
         
@@ -24,64 +40,99 @@ namespace MANIFOLD {
         public static string VToolsFolder => FileSystem.ProjectTemporary.GetFullPath(VTOOLS_FOLDER);
         public static string WorkFolder => FileSystem.ProjectTemporary.GetFullPath(WORK_FOLDER);
 
-        public static async Task Execute(string command, params string[] args) {
+        public static async ValueTask<ExecutionResult> Execute(ExecutionInfo info) {
             if (!ExecutableExists()) {
                 bool askResult = await ShowConfirmation($"VTools are missing. Do you want to download VTools?\nVTools is open source and hosted on GitHub.\n{GITHUB_LINK}\n\nIt will be downloaded from\n{DOWNLOAD_LINK}");
                 if (!askResult) {
                     Log.Info("VTools: Download declined. Cancelling command.");
-                    return;
+                    return null;
                 }
                 
                 bool downloadResult = await DownloadFiles();
                 if (!downloadResult) {
                     Log.Info("VTools: Download cancelled.");
-                    return;
+                    return null;
                 }
             }
             
             if (!SettingsExists()) {
                 await RunInit();
             }
-            var list = new List<string>(args.Length + 3);
-            list.Add(command);
-            list.AddRange(args);
-            list.Add("--work-folder");
-            list.Add(WorkFolder);
+            var realArgs = new List<string>(info.arguments.Count + 3);
+            realArgs.Add(info.command);
+            realArgs.AddRange(info.arguments);
+            realArgs.Add("--work-folder");
+            realArgs.Add(WorkFolder);
             
-            using var handle = Progress.Start($"VTools: {command}");
-            await ExecuteInternal(Progress.GetCancel(), list.ToArray());
+            // using var handle = Progress.Start($"VTools: {command}");
+            return await ExecuteInternal(realArgs, info);
         }
         
-        private static async Task RunInit() {
+        private static async ValueTask<ExecutionResult> RunInit() {
             FileSystem.ProjectTemporary.CreateDirectory(WORK_FOLDER);
             
-            using var handle = Progress.Start("Initialize VTools");
-            await ExecuteInternal(CancellationToken.None, "init", Project.Current.GetAssetsPath(), "-f", FileSystem.ProjectTemporary.GetFullPath(WORK_FOLDER));
+            // using var handle = Progress.Start("Initialize VTools");
+            return await ExecuteInternal([ "init", Project.Current.GetAssetsPath(), "-f", FileSystem.ProjectTemporary.GetFullPath(WORK_FOLDER) ], new ExecutionInfo() {
+                autoCloseDialog = true
+            });
         }
         
-        private static async Task ExecuteInternal(CancellationToken token, params string[] args) {
-            ProcessStartInfo info = new ProcessStartInfo(ExecutablePath, args);
-            info.CreateNoWindow = true;
-            info.RedirectStandardOutput = true;
-            info.RedirectStandardError = true;
+        private static async ValueTask<ExecutionResult> ExecuteInternal(IEnumerable<string> args, ExecutionInfo execInfo) {
+            ProcessStartInfo procInfo = new ProcessStartInfo(ExecutablePath, args);
+            procInfo.CreateNoWindow = true;
+            procInfo.RedirectStandardOutput = true;
+            procInfo.RedirectStandardError = true;
+
+            using var process = new Process();
+            process.StartInfo = procInfo;
+
+            ExecutionResult execResult = new ExecutionResult();
+            process.OutputDataReceived += (_, evt) => {
+                execResult.logs.Add(evt.Data);
+            };
+            process.ErrorDataReceived += (_, evt) => {
+                if (string.IsNullOrWhiteSpace(evt.Data)) return;
+                execResult.errors.Add(evt.Data);
+            };
             
-            using var process = Process.Start(info);
+            ProcessDialog dialog = null;
+            if (execInfo.showDialog) {
+                dialog = new ProcessDialog();
+                dialog.onCancel = () => {
+                    if (!process.HasExited) {
+                        process.Kill();
+                    }
+                    dialog.Failed();
+                };
+                process.OutputDataReceived += (_, evt) => {
+                    dialog.AddInfo(evt.Data);
+                };
+                process.ErrorDataReceived += (_, evt) => {
+                    dialog.AddError(evt.Data);
+                };
+                dialog.Show();
+            }
+            
+            process.Start();
+            process.BeginOutputReadLine();
+            process.BeginErrorReadLine();
+            
             if (!process.HasExited) {
-                await process.WaitForExitAsync(token);
-                
-                if (token.IsCancellationRequested) {
-                    Log.Info("VTools execution cancelled.");
-                    return;
+                await process.WaitForExitAsync(execInfo.token);
+            }
+            if (dialog != null) {
+                dialog.Finished();
+                if (execInfo.autoCloseDialog) {
+                    dialog.Close();
                 }
             }
-            
-            var errorStr = await process.StandardError.ReadToEndAsync();
-            if (!string.IsNullOrWhiteSpace(errorStr)) {
-                Log.Error($"VTools error occured.\nArgs: \"{string.Join(' ', args)}\"\nError: {errorStr}");
+
+            if (execResult.HadErrors) {
+                Log.Error($"VTools error occured.\nArgs: \"{string.Join(' ', args)}\"\nError: {execResult.errors[^1]}");
+                dialog?.Failed();
             }
-            
-            // var str = await process.StandardOutput.ReadToEndAsync();
-            // Log.Info($"VTools. Args: {string.Join(" ", args)}, Result: {str}");
+
+            return execResult;
         }
         
         // CHECKS
