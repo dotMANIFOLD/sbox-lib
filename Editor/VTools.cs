@@ -28,7 +28,8 @@ namespace MANIFOLD.Editor {
         }
         
         public const string GITHUB_LINK = "https://github.com/dotMANIFOLD/sbox-vtools";
-        public const string DOWNLOAD_LINK = GITHUB_LINK + "/releases/latest/download/vtools.zip";
+        public const string TARGET_VERSION = "0.1.0";
+        public const string DOWNLOAD_LINK = $"{GITHUB_LINK}/releases/download/{TARGET_VERSION}/vtools-win-x64.zip";
         
         public const string VTOOLS_FOLDER = "vtools/";
         public const string EXECUTABLE = "vtools.exe";
@@ -40,6 +41,8 @@ namespace MANIFOLD.Editor {
         public static string VToolsFolder => FileSystem.ProjectTemporary.GetFullPath(VTOOLS_FOLDER);
         public static string WorkFolder => FileSystem.ProjectTemporary.GetFullPath(WORK_FOLDER);
 
+        private static bool versionWarningIgnored;
+        
         public static async ValueTask<ExecutionResult> Execute(ExecutionInfo info) {
             if (!ExecutableExists()) {
                 bool askResult = await ShowConfirmation($"VTools are missing. Do you want to download VTools?\nVTools is open source and hosted on GitHub.\n{GITHUB_LINK}\n\nIt will be downloaded from\n{DOWNLOAD_LINK}");
@@ -54,6 +57,26 @@ namespace MANIFOLD.Editor {
                     return null;
                 }
             }
+
+            if (!versionWarningIgnored) {
+                var version = await VersionsMatch();
+                if (!version.Item2) {
+                    bool askResult = await ShowConfirmation($"The incorrect version of VTools are installed. " +
+                                                            $"Would you like to install the correct one? " +
+                                                            $"If declined, you will not be prompted until the next session.\n" +
+                                                            $"Installed version: {version.Item1} // Target version: {TARGET_VERSION}");
+
+                    if (askResult) {
+                        bool downloadResult = await DownloadFiles();
+                        if (!downloadResult) {
+                            Log.Info("VTools: Download cancelled. Cancelling command.");
+                            return null; // i would have it continue but this is just in case everything was deleted.
+                        }
+                    } else {
+                        versionWarningIgnored = true;
+                    }
+                }
+            }
             
             if (!SettingsExists()) {
                 await RunInit();
@@ -64,7 +87,6 @@ namespace MANIFOLD.Editor {
             realArgs.Add("--work-folder");
             realArgs.Add(WorkFolder);
             
-            // using var handle = Progress.Start($"VTools: {command}");
             return await ExecuteInternal(realArgs, info);
         }
         
@@ -122,7 +144,7 @@ namespace MANIFOLD.Editor {
             }
             if (dialog != null) {
                 dialog.Finished();
-                if (execInfo.autoCloseDialog) {
+                if (execInfo.autoCloseDialog && !execResult.HadErrors) {
                     dialog.Close();
                 }
             }
@@ -143,6 +165,20 @@ namespace MANIFOLD.Editor {
         public static bool SettingsExists() {
             return FileSystem.ProjectTemporary.FileExists(WORK_FOLDER + SETTINGS);
         }
+
+        public static async ValueTask<string> GetInstalledVersion() {
+            var result = await ExecuteInternal(["--version"], new ExecutionInfo() {
+                showDialog = false,
+                autoCloseDialog = true
+            });
+            
+            return result.logs[0].Substring(1);
+        }
+
+        public static async ValueTask<(string, bool)> VersionsMatch() {
+            var version = await GetInstalledVersion();
+            return (version, version == TARGET_VERSION);
+        }
         
         // POPUP
         private static async ValueTask<bool> ShowConfirmation(string question) {
@@ -156,8 +192,6 @@ namespace MANIFOLD.Editor {
         }
 
         private static async ValueTask<bool> DownloadFiles() {
-            FileSystem.ProjectTemporary.CreateDirectory(VTOOLS_FOLDER);
-            
             using var handle = Progress.Start("Downloading VTools");
             var token = Progress.GetCancel();
             var bytes = await Http.RequestBytesAsync(DOWNLOAD_LINK, cancellationToken: token);
@@ -165,6 +199,11 @@ namespace MANIFOLD.Editor {
             if (token.IsCancellationRequested) {
                 return false;
             }
+
+            if (FileSystem.ProjectTemporary.DirectoryExists(VTOOLS_FOLDER)) {
+                FileSystem.ProjectTemporary.DeleteDirectory(VTOOLS_FOLDER, true);
+            }
+            FileSystem.ProjectTemporary.CreateDirectory(VTOOLS_FOLDER);
             
             using var stream = new MemoryStream(bytes);
             using var zip = new ZipArchive(stream);
