@@ -153,35 +153,16 @@ namespace MANIFOLD.AnimGraph {
             
             mainGroup = new OrderedJobGroup();
 
-            JobCreationContext ctx = new JobCreationContext();
-            ctx.parameters = parameters;
-            var jobs = graph.Nodes.Values
-                .Where(x => x.Reachable)
-                .Select(x => x.CreateJob(ctx))
-                .ToDictionary(x => x.ID);
-            
-            applyJob = (ApplyToModelJob)jobs.First(x => x.Value is ApplyToModelJob).Value;
+            // CREATE APPLY TO MODEL JOB
+            applyJob = new ApplyToModelJob();
             applyJob.SetGraph(mainGroup);
             
-            // CONNECT JOBS
-            foreach (var job in jobs.Values) {
-                var animNode = graph.Nodes[job.ID];
-                if (animNode == null) {
-                    Log.Warning("Node is null???? wtf????");
-                    continue;
-                }
-                if (job is not IInputAnimJob inputJob) {
-                    continue;
-                }
-                
-                var inputs = animNode.GetInputs();
-                int index = 0;
-                foreach (var reference in inputs) {
-                    if (!reference.IsValid()) continue;
-                    inputJob.InputFrom((IOutputAnimJob)jobs[reference.ID.Value], index);
-                    index++;
-                }
-            }
+            // CREATE ANIM GRAPH
+            JobCreationContext ctx = new JobCreationContext();
+            ctx.parameters = parameters;
+
+            var animGraphJob = new AnimGraphJob(graph, ctx);
+            animGraphJob.OutputTo(applyJob, 0);
             
             // GROUPING
             var branches = applyJob.ResolveBranchesFlat();
