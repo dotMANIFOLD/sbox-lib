@@ -16,7 +16,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [Title("Fallback Value"), HideIfValid(nameof(PlaybackSpeedParameter))]
         public float PlaybackSpeed { get; set; } = 1;
         public bool Looping { get; set; }
-
+        public bool Interpolated { get; set; } = true;
         
         [JsonIgnore, Hide]
         public override string DisplayName => "Animation Clip";
@@ -36,6 +36,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
                 job.PlaybackSpeed = PlaybackSpeed;
             }
             job.Looping = Looping;
+            job.Interpolate = Interpolated;
             return job;
         }
 

@@ -54,6 +54,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             }
         }
         public bool Looping { get; set; }
+        public bool Interpolate { get; set; }
         public float Time { get; set; }
         
         public IReadOnlyList<Output<JobResults>> Outputs => outputs;
@@ -92,17 +93,27 @@ namespace MANIFOLD.AnimGraph.Jobs {
             if (animation == null || trackCache == null) return;
             
             float interval = (1 / animation.FrameRate);
-            int frame = (Time / (1 / animation.FrameRate)).FloorToInt();
+            float frame = Time / (1 / animation.FrameRate);
+            int lastFrame = frame.FloorToInt();
+            float lerpFactor = frame - lastFrame;
 
             for (int i = 0; i < BindData.bindPose.BoneCount; i++) {
                 Transform transform = BindData.bindPose[i];
                 var group = trackCache[i];
                 
                 if (group.position != null) {
-                    transform.Position = group.position.Get(frame);
+                    transform.Position = group.position.Get(lastFrame);
+                    if (Interpolate) {
+                        var next = group.position.GetNext(lastFrame);
+                        transform.Position = transform.Position.LerpTo(next, lerpFactor);
+                    }
                 }
                 if (group.rotation != null) {
-                    transform.Rotation = group.rotation.Get(frame);
+                    transform.Rotation = group.rotation.Get(lastFrame);
+                    if (Interpolate) {
+                        var next = group.rotation.GetNext(lastFrame);
+                        transform.Rotation = transform.Rotation.SlerpTo(next, lerpFactor);
+                    }
                 }
                 
                 cachedPose[i] = transform;
