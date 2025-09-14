@@ -48,6 +48,7 @@ namespace MANIFOLD.AnimGraph.Editor {
     }
 
     public class GraphPlugIn : GraphPlug, IPlugIn {
+        private readonly GraphNode node;
         private DisplayInfo displayInfo;
         private NodeRef reference;
         
@@ -60,13 +61,15 @@ namespace MANIFOLD.AnimGraph.Editor {
                 return Node.Graph.Nodes[reference.ID.Value].Outputs.First();
             }
             set {
-                var node = ((GraphNode)value?.Node)?.RealNode;
-                reference.ID = node?.ID;
-                Log.Info($"Set connnection: {node?.ID}");
+                var jobNode = ((GraphNode)value?.Node)?.RealNode;
+                reference.ID = jobNode?.ID;
+                node.Graph.ScanReachableNodes();
+                Log.Info($"Set connnection: {jobNode?.ID}");
             }
         }
 
         public GraphPlugIn(GraphNode node, int plugIndex, NodeRef reference, DisplayInfo info) : base(node, plugIndex) {
+            this.node = node;
             this.reference = reference;
             this.displayInfo = info;
         }
@@ -199,7 +202,11 @@ namespace MANIFOLD.AnimGraph.Editor {
             var type = realNode.GetType();
 
             foreach (var prop in type.GetProperties()) {
-                if (prop.GetCustomAttribute<InputAttribute>() == null) continue;
+                bool valid = false;
+                
+                var attr = prop.GetCustomAttribute<InputAttribute>();
+                valid = attr != null;
+                if (!valid) continue;
                 
                 if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<NodeRef>))) {
                     // collection of references

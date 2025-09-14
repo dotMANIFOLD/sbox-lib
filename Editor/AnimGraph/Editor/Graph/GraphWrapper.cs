@@ -24,6 +24,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             nodes.Add(realNode.ID, graphNode);
             Graph.AddNode(realNode);
+            Graph.StateHasChanged();
             
             Log.Info($"Added node {realNode.ID}");
         }
@@ -34,6 +35,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             nodes.Remove(realNode.ID);
             Graph.RemoveNode(realNode);
+            Graph.StateHasChanged();
             
             Log.Info($"Removed node {realNode.ID}");
         }
@@ -49,9 +51,31 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
 
         public void RebuildFromGraph() {
+            nodes.Clear();
             foreach (var node in Graph.Nodes.Values) {
                 var editorNode = new GraphNode(this, node);
                 nodes.Add(node.ID, editorNode);
+            }
+        }
+
+        public void ScanReachableNodes() {
+            foreach (var node in Graph.Nodes.Values) {
+                node.Reachable = false;
+            }
+            
+            HashSet<JobNode> connected = new HashSet<JobNode>();
+            var finalPose = Graph.FinalPoseNode;
+            GetAllRecurse(connected, finalPose);
+            foreach (var node in connected) {
+                node.Reachable = true;
+            }
+        }
+
+        private void GetAllRecurse(HashSet<JobNode> connected, JobNode current) {
+            connected.Add(current);
+            foreach (var child in current.GetInputs()) {
+                if (!child.IsValid) continue;
+                GetAllRecurse(connected, Graph.Nodes[child.ID.Value]);
             }
         }
     }

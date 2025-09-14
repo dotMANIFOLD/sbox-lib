@@ -23,7 +23,13 @@ namespace MANIFOLD.AnimGraph {
     }
     
     public abstract class JobNode : BaseNode {
-        [JsonIgnore]
+        /// <summary>
+        /// Is this node reachable?
+        /// </summary>
+        [ReadOnly]
+        public bool Reachable { get; set; }
+        
+        [Hide, JsonIgnore]
         public abstract Color AccentColor { get; }
         
         public abstract IBaseAnimJob CreateJob(in JobCreationContext ctx);

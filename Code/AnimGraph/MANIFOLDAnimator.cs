@@ -155,7 +155,10 @@ namespace MANIFOLD.AnimGraph {
 
             JobCreationContext ctx = new JobCreationContext();
             ctx.parameters = parameters;
-            var jobs = graph.Nodes.Values.Select(x => x.CreateJob(ctx)).ToDictionary(x => x.ID);
+            var jobs = graph.Nodes.Values
+                .Where(x => x.Reachable)
+                .Select(x => x.CreateJob(ctx))
+                .ToDictionary(x => x.ID);
             
             applyJob = (ApplyToModelJob)jobs.First(x => x.Value is ApplyToModelJob).Value;
             applyJob.SetGraph(mainGroup);
