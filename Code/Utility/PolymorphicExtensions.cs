@@ -47,14 +47,14 @@ namespace MANIFOLD.Utility {
             return list;
         }
 
-        public static Dictionary<TKey, TValue> DeserializePolymorphic<TKey, TValue>(this JsonObject obj, Action<TKey, TValue> onCreate = null) {
+        public static Dictionary<TKey, TValue> DeserializePolymorphic<TKey, TValue>(this JsonObject obj, Action<TKey, TValue> onCreate = null) where TKey : IParsable<TKey> {
             Dictionary<TKey, TValue> dict = new Dictionary<TKey, TValue>();
             foreach (var pair in obj) {
                 TKey key;
                 if (pair.Key == NULL_KEY) {
                     key = default;
                 } else {
-                    key = (TKey)Convert.ChangeType(pair.Key, typeof(TKey));
+                    key = TKey.Parse(pair.Key, null);
                 }
 
                 TValue value = pair.Value.FromPolymorphic<TValue>();
