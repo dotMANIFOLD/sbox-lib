@@ -9,7 +9,7 @@ using Sandbox;
 namespace MANIFOLD.AnimGraph {
     using Nodes;
     
-    [AssetType(Name = "Animation Graph", Category = ModuleData.CATEGORY, Extension = EXTENSION)]
+    [AssetType(Name = "Animation Graph", Category = ModuleData.CATEGORY, Extension = EXTENSION, Flags = AssetTypeFlags.NoEmbedding)]
     public class AnimGraph : GameResource {
         public const string EXTENSION = ModuleData.EXT_PREFIX + "ph";
         public const string TYPE_FIELD = "_type";
