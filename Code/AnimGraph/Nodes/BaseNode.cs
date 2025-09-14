@@ -14,5 +14,9 @@ namespace MANIFOLD.AnimGraph {
         public abstract string DisplayName { get; }
         [Hide]
         public Vector2 Position { get; set; }
+
+        public override int GetHashCode() {
+            return ID.GetHashCode();
+        }
     }
 }
