@@ -31,8 +31,8 @@ namespace MANIFOLD.Jobs {
         }
         
         // ENUMERATOR
-        public IEnumerator<IJob> GetEnumerator() {
-            return allJobs.Values.Cast<IJob>().GetEnumerator();
+        public virtual IEnumerator<IJob> GetEnumerator() {
+            return allJobs.Values.GetEnumerator();
         }
 
         IEnumerator IEnumerable.GetEnumerator() {

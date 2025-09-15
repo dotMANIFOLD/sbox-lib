@@ -25,5 +25,9 @@ namespace MANIFOLD.Jobs {
             order.RemoveAt(order.IndexOfValue(job));
             order.Add(value, job);
         }
+
+        public override IEnumerator<IJob> GetEnumerator() {
+            return order.Values.GetEnumerator();
+        }
     }
 }

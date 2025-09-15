@@ -4,10 +4,12 @@ using System.Collections.Generic;
 namespace MANIFOLD.Jobs {
     public interface IInputSocket {
         public IOutputJob Job { get; }
+        public Type DataType { get; }
     }
 
     public record Input<TData>(IOutputJob<TData> Job) : IInputSocket {
         IOutputJob IInputSocket.Job => Job;
+        public Type DataType => typeof(TData);
     }
     
     public interface IInputJob : IJob {
