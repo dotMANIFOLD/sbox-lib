@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Editor;
@@ -7,22 +8,65 @@ using Editor.NodeEditor;
 namespace MANIFOLD.AnimGraph.Editor {
     [EditorForAssetType(AnimGraph.EXTENSION)]
     public class AnimGraphEditor : Window, IAssetEditor {
-        private StatusBar statusBar;
         private DockManager dock;
         
-        private Preview preview;
-        private Inspector inspector;
+        private PreviewPanel previewPanel;
+        private InspectorPanel inspectorPanel;
+        private ResourcePanel resourcePanel;
         private ParameterTable parameterTable;
         private TagList tagList;
         private AnimGraphView graphView;
 
+        private Asset graphAsset;
+        private AnimGraph graphResource;
+        private GraphWrapper graphWrapper;
+        
+        private IEnumerable<BaseNode> selectedNodeses;
+        private IEnumerable<Guid> selectedNodeGuids;
+        private Parameter selectedParameter;
+        private Guid? selectedParameterGuid;
         private bool ignoreSelection;
         
-        public Asset GraphAsset { get; set; }
-        public AnimGraph GraphResource { get; set; }
+        public Asset GraphAsset => graphAsset;
+        public AnimGraph GraphResource => graphResource;
+        public GraphWrapper GraphWrapper => graphWrapper;
+
+        public IEnumerable<BaseNode> SelectedNodes {
+            get => selectedNodeses;
+            set {
+                var oldParam = selectedParameter;
+                
+                selectedNodeses = value;
+                selectedNodeGuids = value.Select(x => x.ID);
+                selectedParameter = null;
+                selectedParameterGuid = null;
+                
+                inspectorPanel.SetNodes(value);
+                parameterTable.OnSelectionChanged(oldParam, null);
+            }
+        }
+        public Parameter SelectedParameter {
+            get => selectedParameter;
+            set {
+                var oldParam = selectedParameter;
+                
+                selectedParameter = value;
+                selectedParameterGuid = selectedParameter?.ID;
+                selectedNodeses = null;
+                selectedParameterGuid = null;
+                
+                graphView.ClearSelection();
+                inspectorPanel.SetParameter(value);
+                parameterTable.OnSelectionChanged(oldParam, value);
+            }
+        }
+        
+        public bool InPreview { get; set; }
         
         public bool CanOpenMultipleAssets => false;
 
+        public event Action OnGraphReload;
+        
         public AnimGraphEditor() {
             WindowTitle = "MANIFOLD AnimGraph";
             Size = new Vector2(1600, 800);
@@ -34,14 +78,9 @@ namespace MANIFOLD.AnimGraph.Editor {
             Canvas.Layout = Layout.Column();
             Canvas.Layout.Spacing = 4;
             
-            statusBar = new StatusBar(Canvas);
-            statusBar.MinimumHeight = 40;
-            statusBar.SetSizeMode(SizeMode.Flexible, SizeMode.CanGrow);
-            
             dock = new DockManager(Canvas);
             dock.SetSizeMode(SizeMode.Flexible, SizeMode.Flexible);
             
-            Canvas.Layout.Add(statusBar);
             Canvas.Layout.Add(dock);
             
             DefaultDockState();
@@ -52,14 +91,11 @@ namespace MANIFOLD.AnimGraph.Editor {
         public void AssetOpen(Asset asset) {
             if (asset == null || string.IsNullOrWhiteSpace(asset.AbsolutePath)) return;
             
-            GraphAsset = asset;
-            GraphResource = GraphAsset.LoadResource<AnimGraph>();
+            graphAsset = asset;
+            graphResource = GraphAsset.LoadResource<AnimGraph>();
+            graphWrapper = new GraphWrapper(GraphResource);
             
-            graphView.Graph = new GraphWrapper(GraphResource);
-            statusBar.Graph = GraphResource;
-            parameterTable.Graph = GraphResource;
-            preview.Graph = GraphResource;
-            
+            OnGraphReload?.Invoke();
             Focus();
         }
 
@@ -89,25 +125,26 @@ namespace MANIFOLD.AnimGraph.Editor {
         private void DefaultDockState() {
             dock.Clear();
 
-            preview = new Preview();
-            inspector = new Inspector();
-            parameterTable = new ParameterTable();
+            previewPanel = new PreviewPanel(this);
+            inspectorPanel = new InspectorPanel(this);
+            resourcePanel = new ResourcePanel(this);
+            parameterTable = new ParameterTable(this);
             tagList = new TagList();
             graphView = new AnimGraphView(this);
             
-            inspector.OnInputChanged += OnPropertyChanged;
-            parameterTable.OnParameterSelected += OnParameterSelected;
-            graphView.OnSelectionChanged += OnNodeSelectionChanged;
+            inspectorPanel.OnNodeInputChanged += OnInputChanged;
             
-            dock.RegisterDockType("Preview", null, () => preview = new Preview());
-            dock.RegisterDockType("Inspector", null, () => inspector = new Inspector());
-            dock.RegisterDockType("ParameterList", null, () => parameterTable = new ParameterTable());
+            dock.RegisterDockType("Preview", null, () => previewPanel = new PreviewPanel(this));
+            dock.RegisterDockType("Inspector", null, () => inspectorPanel = new InspectorPanel(this));
+            dock.RegisterDockType("ParameterList", null, () => parameterTable = new ParameterTable(this));
             dock.RegisterDockType("TagList", null, () => tagList = new TagList());
             
             dock.AddDock(null, graphView, DockArea.Right, DockManager.DockProperty.HideCloseButton);
-            dock.AddDock(graphView, preview, DockArea.Left, DockManager.DockProperty.HideOnClose, split: 0.2f);
-            dock.AddDock(graphView, inspector, DockArea.Right, DockManager.DockProperty.HideOnClose, split: 0.2f);
-            dock.AddDock(preview, parameterTable, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
+            dock.AddDock(graphView, previewPanel, DockArea.Left, DockManager.DockProperty.HideOnClose, split: 0.2f);
+            dock.AddDock(graphView, inspectorPanel, DockArea.Right, DockManager.DockProperty.HideOnClose, split: 0.2f);
+            dock.AddDock(inspectorPanel, resourcePanel, DockArea.Inside, DockManager.DockProperty.HideOnClose);
+            dock.RaiseDock(inspectorPanel);
+            dock.AddDock(previewPanel, parameterTable, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
             dock.AddDock(parameterTable, tagList, DockArea.Inside, DockManager.DockProperty.HideOnClose);
 
             dock.RaiseDock(parameterTable);
@@ -116,20 +153,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
 
         // CHANGES
-        private void OnNodeSelectionChanged() {
-            if (ignoreSelection) {
-                ignoreSelection = false;
-                return;
-            }
-            
-            inspector.SetNodes(graphView.SelectedItems.Cast<NodeUI>().Select(x => x.Node).Cast<GraphNode>());
-        }
-
-        private void OnParameterSelected(Parameter parameter) {
-            inspector.SetParameter(parameter);
-        }
-
-        private void OnPropertyChanged() {
+        private void OnInputChanged() {
             foreach (var node in graphView.SelectedItems.Cast<NodeUI>().Select(x => x.Node).Cast<GraphNode>()) {
                 node.UpdatePlugs();
             }
@@ -137,7 +161,19 @@ namespace MANIFOLD.AnimGraph.Editor {
         
         // FILE MANAGEMENT
         private void SaveGraph() {
-            Log.Info("Save called");
+            graphAsset.SaveToDisk(GraphResource);
+            graphResource = GraphAsset.LoadResource<AnimGraph>();
+            graphWrapper = new GraphWrapper(GraphResource);
+
+            if (selectedNodeGuids != null) {
+                selectedNodeses = selectedNodeGuids.Select(x => graphResource.Nodes[x]);
+            }
+            if (selectedParameterGuid.HasValue) {
+                selectedParameter = graphResource.Parameters[selectedParameterGuid.Value];
+            }
+            
+            OnGraphReload?.Invoke();
+            Log.Info("Anim graph saved");
         }
 
         private void CloseSelf() {

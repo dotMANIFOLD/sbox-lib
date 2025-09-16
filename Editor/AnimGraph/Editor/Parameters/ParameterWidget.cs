@@ -69,15 +69,23 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
 
         protected override void OnPaint() {
-            Rect rect = new Rect(0, Size);
-
-            if (Selected) {
-                Paint.SetBrushAndPen(Theme.SelectedBackground);
-                Paint.DrawRect(rect);
-            }
+            Rect rect = LocalRect.Shrink(0, 0, 1, 1);
             
-            Rect colorRect = new Rect(0, 0, COLOR_WIDTH, Size.y);
-            Paint.SetBrushAndPen(rectColor);
+            Paint.SetBrush(Selected ? Theme.SelectedBackground : Theme.BaseAlt);
+            Paint.SetPen(Theme.SurfaceLightBackground);
+            Paint.DrawRect(rect);
+
+            rect = rect.Shrink(1, 1, 0, 0);
+            
+            // if (Selected) {
+            //     Paint.SetBrushAndPen(Theme.SelectedBackground);
+            //     Paint.DrawRect(rect);
+            // }
+
+            Rect colorRect = rect;
+            colorRect.Width = COLOR_WIDTH;
+            Paint.SetBrush(rectColor);
+            Paint.ClearPen();
             Paint.DrawRect(colorRect);
 
             rect = rect.Shrink(COLOR_WIDTH, 0, 0, 0).Shrink(PADDING, 0);
@@ -107,11 +115,6 @@ namespace MANIFOLD.AnimGraph.Editor {
                 Paint.SetPen(Theme.Text);
                 Paint.DrawText(nameRect, param.Name, TextFlag.LeftCenter);
             }
-            
-            // BORDER
-            Paint.SetPen(Theme.SurfaceLightBackground);
-            Paint.ClearBrush();
-            Paint.DrawRect(new Rect(0, Size).Shrink(0, 0, 1, 1));
         }
         
         private void GetRenderValues() {

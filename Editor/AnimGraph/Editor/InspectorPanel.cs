@@ -6,18 +6,22 @@ using Editor;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
-    public class Inspector : Widget {
+    public class InspectorPanel : Widget {
         public const string EMPTY_LABEL = "Select a node to view it's properties...";
 
+        private readonly AnimGraphEditor editor;
+        
         private SerializedObject serialized;
         private bool changingCollection;
         private int oldCollectionCount;
         private bool addOperation;
         private int addCount;
-
-        public event Action OnInputChanged;
         
-        public Inspector() {
+        public event Action OnNodeInputChanged;
+        
+        public InspectorPanel(AnimGraphEditor editor) : base(editor) {
+            this.editor = editor;
+            
             Name = "Inspector";
             WindowTitle = "Inspector";
 
@@ -26,7 +30,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             ShowLabel(EMPTY_LABEL);
         }
 
-        public void SetNodes(IEnumerable<GraphNode> nodes) {
+        public void SetNodes(IEnumerable<BaseNode> nodes) {
             Layout.Clear(true);
             
             if (nodes == null) {
@@ -43,7 +47,7 @@ namespace MANIFOLD.AnimGraph.Editor {
                 return;
             }
             
-            serialized = EditorTypeLibrary.GetSerializedObject(nodes.First().RealNode);
+            serialized = nodes.First().GetSerialized();
             serialized.OnPropertyPreChange += OnPropertyPreChange;
             serialized.OnPropertyChanged += OnPropertyChanged;
             
@@ -54,6 +58,11 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         public void SetParameter(Parameter parameter) {
             Layout.Clear(true);
+
+            if (parameter == null) {
+                ShowLabel(EMPTY_LABEL);
+                return;
+            }
             
             serialized = EditorTypeLibrary.GetSerializedObject(parameter);
 
@@ -100,7 +109,7 @@ namespace MANIFOLD.AnimGraph.Editor {
                 addCount--;
 
                 if (addCount == 0) {
-                    OnInputChanged?.Invoke();
+                    OnNodeInputChanged?.Invoke();
                 }
             }
             
@@ -112,11 +121,13 @@ namespace MANIFOLD.AnimGraph.Editor {
                 addOperation = addCount > 0;
 
                 if (!addOperation) {
-                    OnInputChanged?.Invoke();
+                    OnNodeInputChanged?.Invoke();
                 }
 
                 changingCollection = false;
             }
+            
+            editor.GraphResource.StateHasChanged();
         }
     }
 }

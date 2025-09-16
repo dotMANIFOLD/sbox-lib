@@ -82,6 +82,10 @@ namespace MANIFOLD.AnimGraph {
             Stop();
         }
 
+        protected override void OnDestroy() {
+            mainGroup?.RemoveFromDebug();
+        }
+
         protected override void OnUpdate() {
             // TODO: move updating to the scene system
             if (isPlaying) {
@@ -96,11 +100,11 @@ namespace MANIFOLD.AnimGraph {
         public void Play() {
             if (graph == null || renderer == null) return;
             if (isPlaying) return;
-
-            context ??= new JobContext();
             
             isPlaying = true;
-            context.time = 0;
+            if (context != null) {
+                context.time = 0;
+            }
         }
 
         /// <summary>
@@ -117,6 +121,7 @@ namespace MANIFOLD.AnimGraph {
         public void Bind() {
             if (mainGroup == null) return;
             bindData = new JobBindData(animations, renderer);
+            context ??= new JobContext();
             mainGroup.BindAnimData(bindData);
             mainGroup.SetAnimContext(context);
         }
@@ -150,6 +155,10 @@ namespace MANIFOLD.AnimGraph {
         /// </summary>
         public void RebuildGraph() {
             if (graph == null) return;
+
+            if (mainGroup != null) {
+                mainGroup.RemoveFromDebug();
+            }
             
             mainGroup = new OrderedJobGroup();
 
@@ -174,6 +183,8 @@ namespace MANIFOLD.AnimGraph {
             }
 
             Bind();
+            
+            mainGroup.AddToDebug(GameObject.Name + "_Animator");
         }
 
         /// <summary>

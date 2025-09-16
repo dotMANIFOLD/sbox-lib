@@ -3,20 +3,74 @@ using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class StatusBar : Widget {
+        public class AssetButton : Widget {
+            public Asset asset;
+            
+            public AssetButton(Widget parent) : base(parent) {
+                Layout = Layout.Column();
+                FixedSize = new Vector2(250, 48);
+            }
+
+            protected override void OnPaint() {
+                Paint.ClearPen();
+                Paint.SetBrushLinear(new Vector2(0, Size.y * -0.2f), Size.WithX(0), Theme.ControlBackground, Color.Parse(ModuleData.BG_COLOR).Value.Darken(0.5f));
+                Paint.DrawRect(LocalRect, Theme.ControlRadius);
+
+                if (asset == null) return;
+                
+                var thumbnail = asset.GetAssetThumb();
+                var thumbnailRect = LocalRect.Shrink(4);
+                thumbnailRect.Width = thumbnailRect.Height;
+                
+                Paint.Draw(thumbnailRect, thumbnail);
+
+                var textRect = LocalRect;
+                textRect.Left = thumbnailRect.Right + 4;
+                textRect = textRect.Shrink(4);
+
+                Paint.TextAntialiasing = true;
+                
+                Paint.SetHeadingFont(12f, 600);
+                var nameSize = Paint.MeasureText(asset.Name);
+                
+                Paint.SetDefaultFont();
+                var pathSize = Paint.MeasureText(asset.Path);
+                
+                float totalHeight = nameSize.y + pathSize.y;
+                
+                textRect = textRect.Shrink(0, (textRect.Height - totalHeight) * 0.5f);
+                
+                var activeRect = textRect;
+                activeRect.Height = nameSize.y;
+                Paint.SetHeadingFont(12f, 600);
+                Paint.SetPen(Theme.Text);
+                Paint.DrawText(activeRect, asset.Name, TextFlag.LeftTop);
+                
+                activeRect = textRect;
+                activeRect.Top += nameSize.y;
+                Paint.SetDefaultFont();
+                Paint.SetPen(Theme.TextDisabled);
+                Paint.DrawText(activeRect, asset.Path, TextFlag.LeftTop);
+            }
+        }
+
+        private Asset asset;
         private AnimGraph graph;
 
-        private Layout labelColumn;
-        private Label nameLabel;
-        private Label pathLabel;
-        
-        private ControlWidget collectionWidget;
+        private AssetButton assetButton;
 
+        public Asset Asset {
+            get => asset;
+            set {
+                asset = value;
+                assetButton.asset = asset;
+            }
+        }
+        
         public AnimGraph Graph {
             get => graph;
             set {
                 graph = value;
-                UpdateLabels();
-                UpdateSheet();
             }
         }
         
@@ -25,39 +79,18 @@ namespace MANIFOLD.AnimGraph.Editor {
 
             Layout = Layout.Row();
             Layout.Margin = 4;
-            
-            labelColumn = Layout.Add(Layout.Column());
-            
-            labelColumn.Add(nameLabel = new Label.Subtitle(this));
-            labelColumn.Add(pathLabel = new Label(this));
+            Layout.Spacing = 8;
+
+            assetButton = Layout.Add(new AssetButton(this));
+            Layout.Add(new IconButton("save"));
             
             Layout.AddStretchCell();
-            
-            nameLabel.Color = Color.White;
-            pathLabel.Color = Color.Gray.WithAlpha(0.8f);
         }
 
         protected override void OnPaint() {
             base.OnPaint();
             Paint.SetBrushAndPen(Theme.SurfaceBackground);
             Paint.DrawRect(new Rect(0, Size), Theme.ControlRadius);
-        }
-
-        private void UpdateLabels() {
-            nameLabel.Text = graph.ResourceName;
-            pathLabel.Text = graph.ResourcePath;
-        }
-
-        private void UpdateSheet() {
-            if (collectionWidget != null) {
-                collectionWidget.Destroy();
-            }
-            
-            var obj = EditorTypeLibrary.GetSerializedObject(graph);
-            var prop = obj.GetProperty(nameof(AnimGraph.Resources));
-
-            collectionWidget = ControlWidget.Create(prop);
-            labelColumn.Add(collectionWidget);
         }
     }
 }

@@ -215,7 +215,7 @@ namespace MANIFOLD.AnimGraph.Editor {
                     
                     int count = 0;
                     foreach (var reference in col) {
-                        if (!reference.IsValid()) continue;
+                        if (reference == null) continue;
                         
                         DisplayInfo info = default;
                         info.Name = $"Slot {count}";
@@ -239,7 +239,7 @@ namespace MANIFOLD.AnimGraph.Editor {
                 } else if (prop.PropertyType.IsAssignableTo(typeof(NodeRef))) {
                     // reference
                     var reference = (NodeRef)prop.GetValue(realNode);
-                    if (!reference.IsValid()) continue;
+                    if (reference == null) continue;
                     
                     inputs.Add(new InputData(InputOrigin.Property, reference, DisplayInfo.ForMember(prop)));
                 } else if (prop.PropertyType.IsAssignableTo(typeof(INodeRefProvider))) {
@@ -248,6 +248,8 @@ namespace MANIFOLD.AnimGraph.Editor {
                     if (provider == null) continue;
                     
                     inputs.Add(new InputData(InputOrigin.Property, provider.Reference, DisplayInfo.ForMember(prop)));
+                } else {
+                    Log.Warning("No matching type for this input!");
                 }
             }
 

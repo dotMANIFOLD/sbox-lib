@@ -19,6 +19,12 @@ namespace MANIFOLD.AnimGraph {
         }
 
         // ADD
+        public void AddGraph(AnimGraph graph) {
+            foreach (var parameter in graph.Parameters.Values) {
+                Add(parameter.Clone());
+            }
+        }
+        
         public void Add<T>(Parameter<T> parameter) {
             if (parameters.ContainsKey(parameter.ID)) return;
             if (parametersByName.ContainsKey(parameter.Name)) return;

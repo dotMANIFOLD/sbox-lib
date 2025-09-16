@@ -7,24 +7,16 @@ using Sandbox;
 namespace MANIFOLD.AnimGraph.Editor {
     public class ParameterTable : Widget {
         private record CreateOption(TypeDescription Type, string Name, Color Color);
-        
-        private AnimGraph graph;
 
-        private Widget parameterArea;
-        private List<ParameterWidget> parameters;
-        private ParameterWidget selectedParameter;
+        private readonly AnimGraphEditor editor;
+
+        private Widget canvas;
+        private Dictionary<Parameter, ParameterWidget> widgets;
         
-        public AnimGraph Graph {
-            get => graph;
-            set {
-                graph = value;
-                Refresh();
-            }
-        }
-        
-        public Action<Parameter> OnParameterSelected { get; set; }
-        
-        public ParameterTable() {
+        public ParameterTable(AnimGraphEditor editor) : base(editor) {
+            this.editor = editor;
+            editor.OnGraphReload += RebuildList;
+            
             Name = "ParameterList";
             WindowTitle = "Parameters";
 
@@ -32,57 +24,48 @@ namespace MANIFOLD.AnimGraph.Editor {
             Layout.Margin = 2;
             Layout.Spacing = 4;
 
-            var bar = new Widget(this);
-            bar.Layout = Layout.Row();
-            
-            var addButton = new Button("Add", "add", bar);
+            var row = Layout.AddRow();
+            var addButton = row.Add(new Button("Add", "add"));
             addButton.Clicked = ShowAddMenu;
-            bar.Layout.Add(addButton);
-            bar.Layout.AddStretchCell();
-
-            Layout.Add(bar);
+            row.AddStretchCell();
 
             var scroll = new ScrollArea(this);
-            parameters = new List<ParameterWidget>();
-            parameterArea = scroll.Canvas = new Widget(scroll);
-            parameterArea.Layout = Layout.Column();
-            parameterArea.SetSizeMode(SizeMode.Flexible, SizeMode.CanGrow);
+            canvas = scroll.Canvas = new Widget(scroll);
+            canvas.Layout = Layout.Column();
+            canvas.SetSizeMode(SizeMode.Default, SizeMode.Flexible);
             
             Layout.Add(scroll);
+            
+            widgets = new Dictionary<Parameter, ParameterWidget>();
         }
 
-        public void Refresh() {
-            parameterArea.Layout.Clear(true);
-            parameters.Clear();
+        public void RebuildList() {
+            canvas.Layout.Clear(true);
+            widgets.Clear();
 
-            foreach (var param in graph.Parameters.Values) {
-                var widget = new ParameterWidget(parameterArea);
+            foreach (var param in editor.GraphResource.Parameters.Values) {
+                var widget = new ParameterWidget(canvas);
                 widget.Parameter = param;
                 widget.OnSelected += ParameterSelectCallback;
-                parameterArea.Layout.Add(widget);
-                parameters.Add(widget);
+                canvas.Layout.Add(widget);
+                widgets.Add(param, widget);
             }
-            parameterArea.Layout.AddStretchCell();
-            
+            canvas.Layout.AddStretchCell();
         }
 
-        public void ClearSelection() {
-            foreach (var widget in parameters) {
+        public void OnSelectionChanged(Parameter previous, Parameter current) {
+            foreach (var widget in widgets.Values) {
                 widget.Selected = false;
                 widget.Update();
             }
-        }
-
-        private void ParameterSelectCallback(ParameterWidget widget) {
-            if (widget == selectedParameter) return;
-            if (selectedParameter != null) {
-                selectedParameter.Selected = false;
-                selectedParameter.Update();
+            if (current != null) {
+                widgets[current].Selected = true;
+                widgets[current].Update();
             }
-            selectedParameter = widget;
-            selectedParameter.Update();
-            
-            OnParameterSelected?.Invoke(selectedParameter.Parameter);
+        }
+        
+        private void ParameterSelectCallback(ParameterWidget widget) {
+            editor.SelectedParameter = widget.Parameter;
         }
         
         private void ShowAddMenu() {
@@ -121,8 +104,8 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         private void AddParameter(TypeDescription type) {
             var instance = (Parameter)Activator.CreateInstance(type.TargetType); // TypeDescription has a create function but it doesnt feel like working
-            graph.Parameters.Add(instance.ID, instance);
-            Refresh();
+            editor.GraphResource.Parameters.Add(instance.ID, instance);
+            RebuildList();
         }
     }
 }
