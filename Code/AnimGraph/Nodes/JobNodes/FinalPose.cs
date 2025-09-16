@@ -11,7 +11,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
     /// </summary>
     public sealed class FinalPose : JobNode {
         [Input]
-        public NodeRef Pose { get; set; }
+        public NodeRef Pose { get; set; } = new NodeRef();
         
         [JsonIgnore, Hide]
         public override string DisplayName => "Final Pose";

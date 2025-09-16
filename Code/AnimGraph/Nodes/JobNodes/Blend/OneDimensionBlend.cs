@@ -12,6 +12,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
     [ExposeToAnimGraph]
     public class OneDimensionBlend : JobNode {
         public class BlendPoint : INodeRefProvider {
+            [ReadOnly]
             public NodeRef Input { get; set; } = new NodeRef(null);
             public string Name { get; set; } = "Unnamed";
             public float Value { get; set; }
@@ -23,7 +24,9 @@ namespace MANIFOLD.AnimGraph.Nodes {
         public ParameterRef<float> Parameter { get; set; } = new();
         [Input, WideMode, InlineEditor]
         public BlendPoint[] Points { get; set; } = new BlendPoint[0];
-        
+
+        public bool SyncChildren { get; set; } = true;
+
         [JsonIgnore, Hide]
         public override string DisplayName => "1D Blend";
         [JsonIgnore, Hide]
@@ -31,7 +34,10 @@ namespace MANIFOLD.AnimGraph.Nodes {
 
         public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
             var job = new LinearBlendingJob(ID, Points.Select(x => x.Value).ToArray());
-            job.BlendParameter = ctx.parameters.Get<float>(Parameter.ID.Value);
+            if (Parameter.ID.HasValue) {
+                job.BlendParameter = ctx.parameters.Get<float>(Parameter.ID.Value);
+            }
+            job.SyncPlayback = SyncChildren;
             return job;
         }
 

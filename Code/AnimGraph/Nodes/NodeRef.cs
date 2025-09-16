@@ -6,7 +6,7 @@ namespace MANIFOLD.AnimGraph {
     /// <summary>
     /// Serializable reference to another node.
     /// </summary>
-    public record NodeRef(Guid? ID) : IValid {
+    public record NodeRef(Guid? ID = null) : IValid {
         public Guid? ID { get; set; } = ID;
         
         [JsonIgnore]

@@ -10,10 +10,14 @@ namespace MANIFOLD.AnimGraph.Nodes {
     [ExposeToAnimGraph]
     public class Add : JobNode {
         [Input]
-        public NodeRef Base { get; set; }
+        public NodeRef Base { get; set; } = new NodeRef();
         [Input]
-        public NodeRef Additive { get; set; }
-        
+        public NodeRef Additive { get; set; } = new NodeRef();
+
+        public bool ResetBaseChild { get; set; } = true;
+        public bool ResetAdditiveChild { get; set; } = true;
+        public bool ApplyInModelSpace { get; set; }
+
         [JsonIgnore, Hide]
         public override string DisplayName => "Add";
         [JsonIgnore, Hide]
