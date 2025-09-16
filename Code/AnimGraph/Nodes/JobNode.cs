@@ -26,7 +26,7 @@ namespace MANIFOLD.AnimGraph {
         /// <summary>
         /// Is this node reachable?
         /// </summary>
-        [ReadOnly]
+        [Hide, ReadOnly]
         public bool Reachable { get; set; }
         
         [Hide, JsonIgnore]
