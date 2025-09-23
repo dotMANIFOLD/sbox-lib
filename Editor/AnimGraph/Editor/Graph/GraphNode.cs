@@ -185,10 +185,14 @@ namespace MANIFOLD.AnimGraph.Editor {
             return ui = new JobNodeUI(view, this);
         }
 
+        public virtual string GetDisplayName() {
+            return realNode.DisplayName;
+        }
+        
         public virtual Color GetPrimaryColor(GraphView view) {
             return PrimaryColor;
         }
-
+        
         public virtual Color GetAccentColor(GraphView view) {
             return realNode.AccentColor;
         }

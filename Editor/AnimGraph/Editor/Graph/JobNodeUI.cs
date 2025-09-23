@@ -60,7 +60,7 @@ namespace MANIFOLD.AnimGraph.Editor {
                     titleRect.Left += 18;
                 }
 
-                var title = display.Name;
+                var title = betterNode.GetDisplayName();
 
                 Paint.SetDefaultFont(7, 500);
                 Paint.SetPen(PrimaryColor.Lighten(0.8f));
