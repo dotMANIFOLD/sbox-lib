@@ -127,6 +127,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
                     Time -= duration * mult;
                 }
             }
+
+            OutputData = new JobResults(cachedPose, Time / animation.FrameRate, !Looping && Time >= animation.Duration);
         }
 
         private void CacheAnimation() {

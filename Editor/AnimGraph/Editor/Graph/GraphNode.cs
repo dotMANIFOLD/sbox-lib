@@ -123,9 +123,9 @@ namespace MANIFOLD.AnimGraph.Editor {
         public virtual IEnumerable<IPlugIn> Inputs => inputs;
         public virtual IEnumerable<IPlugOut> Outputs => outputs;
         public bool HasTitleBar => true;
-        public bool IsReachable => true;
+        public bool IsReachable => realNode.Reachable;
 
-        public bool CanClone => true;
+        public bool CanClone => realNode is not FinalPose;
         public bool CanRemove => realNode is not FinalPose;
 
         public Pixmap Thumbnail => null;

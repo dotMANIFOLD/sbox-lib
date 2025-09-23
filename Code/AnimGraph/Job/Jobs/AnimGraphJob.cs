@@ -7,7 +7,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
     public class AnimGraphJob : AnimJob {
         private readonly AnimGraph graph;
         
-        public AnimGraph Graph => graph;
+        public AnimGraph AnimGraph => graph;
         
         public AnimGraphJob(AnimGraph graph, JobCreationContext ctx) : base(Guid.NewGuid()) {
             this.graph = graph;

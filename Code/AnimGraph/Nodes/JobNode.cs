@@ -19,6 +19,8 @@ namespace MANIFOLD.AnimGraph {
     }
 
     public class JobCreationContext {
+        public Model model;
+        public AnimGraphResources resources;
         public ParameterList parameters;
     }
     

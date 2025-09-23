@@ -7,7 +7,7 @@ using Sandbox;
 
 namespace MANIFOLD.Animation {
     [AssetType(Name = "Animation Clip", Category = ModuleData.CATEGORY, Extension = EXTENSION)]
-    public class AnimationClip : GameResource {
+    public class AnimationClip : GameResource, INamedResource {
         public const string EXTENSION = ModuleData.EXT_PREFIX + "clip";
         
         [ReadOnly]

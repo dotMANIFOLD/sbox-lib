@@ -19,7 +19,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         public bool Interpolated { get; set; } = true;
         
         [JsonIgnore, Hide]
-        public override string DisplayName => "Animation Clip";
+        public override string DisplayName => $"Animation Clip: {Animation}";
         [JsonIgnore, Hide]
         public override Color AccentColor => JobCategories.SAMPLING_COLOR;
 

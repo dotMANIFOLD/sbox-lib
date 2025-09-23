@@ -3,7 +3,7 @@ using Sandbox;
 
 namespace MANIFOLD.Animation {
 	[AssetType(Name = "Bone Mask", Category = ModuleData.CATEGORY, Extension = EXTENSION)]
-	public class BoneMask : GameResource {
+	public class BoneMask : GameResource, INamedResource {
 		public const string EXTENSION = ModuleData.EXT_PREFIX + "mask";
 		
 		/// <summary>

@@ -168,6 +168,8 @@ namespace MANIFOLD.AnimGraph {
             
             // CREATE ANIM GRAPH
             JobCreationContext ctx = new JobCreationContext();
+            ctx.model = Renderer.Model;
+            ctx.resources = animations;
             ctx.parameters = parameters;
 
             var animGraphJob = new AnimGraphJob(graph, ctx);

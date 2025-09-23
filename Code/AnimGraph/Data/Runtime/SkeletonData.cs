@@ -1,6 +1,7 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using Sandbox;
 
 namespace MANIFOLD.AnimGraph {
     public class SkeletonData<T> : IEnumerable<T> {
@@ -12,6 +13,12 @@ namespace MANIFOLD.AnimGraph {
         public SkeletonData(SkeletonData<T> other) {
             data = other.data.ToArray();
             remapTable = other.remapTable;
+        }
+
+        public SkeletonData(Model model) {
+            var persistentData = ModelPersistentData.Get(model);
+            remapTable = persistentData.remapTable;
+            data = new T[remapTable.Count];
         }
         
         public SkeletonData(IReadOnlyDictionary<string, int> remapTable) {

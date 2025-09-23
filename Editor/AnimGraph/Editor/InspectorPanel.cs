@@ -10,6 +10,9 @@ namespace MANIFOLD.AnimGraph.Editor {
         public const string EMPTY_LABEL = "Select a node to view it's properties...";
 
         private readonly AnimGraphEditor editor;
+        private readonly ScrollArea scrollArea;
+        private readonly ControlSheet sheet;
+        private readonly Label label;
         
         private SerializedObject serialized;
         private bool changingCollection;
@@ -52,7 +55,10 @@ namespace MANIFOLD.AnimGraph.Editor {
             serialized.OnPropertyChanged += OnPropertyChanged;
             
             var sheet = new ControlSheet();
-            sheet.AddObject(serialized);
+            sheet.AddObject(serialized, (prop) => {
+                bool isDebug = prop.PropertyType.IsAssignableTo(typeof(NodeRef)) || prop.Name == nameof(BaseNode.ID);
+                return (!isDebug || editor.ShowDebugInfo) && DefaultSheetFilter(prop);
+            });
             ShowSheet(sheet);
         }
 
@@ -67,7 +73,9 @@ namespace MANIFOLD.AnimGraph.Editor {
             serialized = EditorTypeLibrary.GetSerializedObject(parameter);
 
             var sheet = new ControlSheet();
-            sheet.AddObject(serialized, (prop) => prop.Name != "Value" && prop.Name != "backingField");
+            sheet.AddObject(serialized, (prop) => {
+                return DefaultSheetFilter(prop) && prop.Name != "Value" && prop.Name != "backingField";
+            });
             ShowSheet(sheet);
         }
 
@@ -75,7 +83,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             var scroll = new ScrollArea(this);
             scroll.Canvas = new Widget();
             scroll.Canvas.Layout = Layout.Column();
-            scroll.Canvas.SetSizeMode(SizeMode.Flexible, SizeMode.CanGrow);
+            scroll.Canvas.SetSizeMode(SizeMode.Default, SizeMode.Flexible);
             
             scroll.Canvas.Layout.Add(sheet);
             scroll.Canvas.Layout.AddStretchCell();
@@ -91,6 +99,11 @@ namespace MANIFOLD.AnimGraph.Editor {
             Layout.AddStretchCell();
         }
 
+        private bool DefaultSheetFilter(SerializedProperty property) {
+            if (property.HasAttribute<HideAttribute>()) return false;
+            return true;
+        }
+        
         private void OnPropertyPreChange(SerializedProperty property) {
             // this check apparently has inheritance, so all elements of an array count as having this attribute
             // just maybe it should be changed

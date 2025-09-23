@@ -8,6 +8,8 @@ using Editor.NodeEditor;
 namespace MANIFOLD.AnimGraph.Editor {
     [EditorForAssetType(AnimGraph.EXTENSION)]
     public class AnimGraphEditor : Window, IAssetEditor {
+        public const string CONTEXT_GRAPH = "MANIFOLD_AnimGraph_Graph";
+        
         private DockManager dock;
         
         private PreviewPanel previewPanel;
@@ -25,7 +27,6 @@ namespace MANIFOLD.AnimGraph.Editor {
         private IEnumerable<Guid> selectedNodeGuids;
         private Parameter selectedParameter;
         private Guid? selectedParameterGuid;
-        private bool ignoreSelection;
         
         public Asset GraphAsset => graphAsset;
         public AnimGraph GraphResource => graphResource;
@@ -62,10 +63,11 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
         
         public bool InPreview { get; set; }
+        public bool ShowDebugInfo { get; set; }
+        
+        public event Action OnGraphReload;
         
         public bool CanOpenMultipleAssets => false;
-
-        public event Action OnGraphReload;
         
         public AnimGraphEditor() {
             WindowTitle = "MANIFOLD AnimGraph";
@@ -95,6 +97,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             graphResource = GraphAsset.LoadResource<AnimGraph>();
             graphWrapper = new GraphWrapper(GraphResource);
             
+            SetContext(CONTEXT_GRAPH, graphResource);
             OnGraphReload?.Invoke();
             Focus();
         }
@@ -119,6 +122,13 @@ namespace MANIFOLD.AnimGraph.Editor {
                 edit.AddOption("Cut", "cut", null, "editor.cut");
                 edit.AddOption("Copy", "copy", null, "editor.copy");
                 edit.AddOption("Paste", "paste", null, "editor.paste");
+            }
+
+            {
+                var view = MenuBar.AddMenu("View");
+                var debugOption = view.AddOption("Show Debug Info", "bug_report");
+                debugOption.Checkable = true;
+                debugOption.Toggled = (value) => ShowDebugInfo = value;
             }
         }
 

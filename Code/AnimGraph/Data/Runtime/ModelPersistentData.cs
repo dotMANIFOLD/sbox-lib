@@ -8,7 +8,11 @@ namespace MANIFOLD.AnimGraph {
             public Pose bindPose;
         }
 
-        private static Dictionary<Model, Data> dictionary = new();
+        static ModelPersistentData() {
+            dictionary = new Dictionary<Model, Data>();
+        }
+        
+        private static Dictionary<Model, Data> dictionary;
 
         public static Data Create(Model model) {
             Dictionary<string, int> remap = new Dictionary<string, int>(model.BoneCount);
