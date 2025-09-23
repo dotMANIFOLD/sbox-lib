@@ -6,6 +6,8 @@ using Sandbox;
 
 namespace MANIFOLD.JobGraph.Editor {
     public class JobGraphGroupUI : NodeUI {
+        public const float MARGIN = 48f;
+        
         private readonly JobGraphNode node;
         private readonly IEnumerable<NodeUI> contains;
         
@@ -14,6 +16,8 @@ namespace MANIFOLD.JobGraph.Editor {
             this.contains = contains;
             Selectable = false;
             Movable = false;
+            HoverEvents = false;
+            Cursor = CursorShape.None;
         }
 
         protected override void Layout() {
@@ -23,7 +27,7 @@ namespace MANIFOLD.JobGraph.Editor {
             foreach (var elem in contains.Skip(1)) {
                 rect.Add(elem.SceneRect);
             }
-            rect = rect.Grow(48);
+            rect = rect.Grow(MARGIN);
             SceneRect = rect;
         }
         

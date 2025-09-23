@@ -1,4 +1,5 @@
-﻿using Editor;
+﻿using System.Linq;
+using Editor;
 using Editor.NodeEditor;
 using MANIFOLD.Jobs;
 
@@ -6,7 +7,9 @@ namespace MANIFOLD.JobGraph.Editor {
     [EditorApp("Job Graph Debugger", "account_tree", "Debug job graphs")]
     public class JobGraphDebugger : Window {
         private readonly ComboBox graphList;
+        private readonly Splitter splitter;
         private readonly GraphView graphView;
+        private readonly JobGraphInspector inspector;
 
         private JobGraphWrapper wrapper;
         
@@ -21,12 +24,17 @@ namespace MANIFOLD.JobGraph.Editor {
             row.Margin = 2;
             row.Spacing = 4;
             graphList = row.Add(new ComboBox(Canvas));
-            row.Add(new IconButton("refresh"));
+            row.Add(new IconButton("refresh") { OnClick = RefreshGraphList });
             row.AddSeparator();
             row.Add(new Button("Organize"));
             row.AddStretchCell();
 
-            graphView = Canvas.Layout.Add(new GraphView(Canvas));
+            splitter = Canvas.Layout.Add(new Splitter(Canvas));
+            graphView = new GraphView(splitter);
+            graphView.OnSelectionChanged = OnGraphSelectionChanged;
+            inspector = new JobGraphInspector(this);
+            splitter.AddWidget(graphView);
+            splitter.AddWidget(inspector);
             
             RefreshGraphList();
             Show();
@@ -58,6 +66,14 @@ namespace MANIFOLD.JobGraph.Editor {
                     ShowGraph(graph);
                 });
             }
+        }
+
+        private void OnGraphSelectionChanged() {
+            var jobs = graphView.SelectedItems
+                .Cast<NodeUI>()
+                .Select(x => (JobGraphNode)x.Node)
+                .Select(x => x.Job);
+            inspector.ShowJobs(jobs);
         }
     }
 }
