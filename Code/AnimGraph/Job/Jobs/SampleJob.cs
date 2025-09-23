@@ -11,9 +11,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
             public Track<Vector3> position;
             public Track<Rotation> rotation;
         }
-        
-        private string animationName;
-        private AnimationClip animation;
+
+        private AnimationClip clip;
         
         private Parameter<float> speedParameter;
         private float playbackSpeed = 1;
@@ -29,10 +28,10 @@ namespace MANIFOLD.AnimGraph.Jobs {
         public JobContext Context { get; set; }
         public JobBindData BindData { get; set; }
 
-        public string Animation {
-            get => animationName;
+        public AnimationClip Clip {
+            get => clip;
             set {
-                animationName = value;
+                clip = value;
                 CacheAnimation();
             }
         }
@@ -53,6 +52,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 speedParameter = value;
             }
         }
+        
         public bool Looping { get; set; }
         public bool Interpolate { get; set; }
         public float Time { get; set; }
@@ -64,8 +64,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
         object IOutputJob.OutputData => OutputData;
 
         public float RealPlaybackSpeed => PlaybackSpeed * graphPlaybackSpeed;
-        public float Duration => animation.Duration * (1 / PlaybackSpeed);
-        public float RealDuration => animation.Duration * (1 / RealPlaybackSpeed);
+        public float Duration => clip.Duration * (1 / PlaybackSpeed);
+        public float RealDuration => clip.Duration * (1 / RealPlaybackSpeed);
         
         public SampleJob() : this(Guid.NewGuid()) { }
         
@@ -76,7 +76,6 @@ namespace MANIFOLD.AnimGraph.Jobs {
         public void Bind() {
             trackCache = new SkeletonData<TrackGroup>(BindData.remapTable);
             cachedPose = BindData.bindPose.Clone();
-            OutputData = new JobResults(cachedPose);
 
             CacheAnimation();
         }
@@ -90,10 +89,10 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
         
         public void Run() {
-            if (animation == null || trackCache == null) return;
+            if (clip == null || trackCache == null) return;
             
-            float interval = (1 / animation.FrameRate);
-            float frame = Time / (1 / animation.FrameRate);
+            float interval = (1 / clip.FrameRate);
+            float frame = Time / (1 / clip.FrameRate);
             int lastFrame = frame.FloorToInt();
             float lerpFactor = frame - lastFrame;
 
@@ -121,23 +120,20 @@ namespace MANIFOLD.AnimGraph.Jobs {
             Time += Context.deltaTime * RealPlaybackSpeed;
             
             if (Looping) {
-                float duration = animation.FrameCount * interval;
+                float duration = clip.FrameCount * interval;
                 if (duration < Time) {
                     float mult = (Time / duration).Floor();
                     Time -= duration * mult;
                 }
             }
 
-            OutputData = new JobResults(cachedPose, Time / animation.FrameRate, !Looping && Time >= animation.Duration);
+            OutputData = new JobResults(cachedPose, Time / clip.FrameRate, !Looping && Time >= clip.Duration);
         }
 
         private void CacheAnimation() {
-            if (trackCache == null) return;
+            if (clip == null || trackCache == null) return;
             
-            animation = BindData.animations.Animations.FirstOrDefault(x => x.Name == animationName);
-            if (animation == null) return;
-            
-            var trackGroups = animation.Tracks.GroupBy(x => x.TargetBone);
+            var trackGroups = clip.Tracks.GroupBy(x => x.TargetBone);
             foreach (var tracks in trackGroups) {
                 if (!BindData.remapTable.TryGetValue(tracks.Key, out int index)) continue;
 

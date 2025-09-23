@@ -10,9 +10,4 @@ namespace MANIFOLD.AnimGraph {
     public class InputAttribute : Attribute {
         
     }
-
-    [AttributeUsage(AttributeTargets.Property)]
-    public class AnimationAttribute : Attribute {
-        
-    }
 }

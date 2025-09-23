@@ -89,6 +89,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             scroll.Canvas.Layout.AddStretchCell();
             
             Layout.Add(scroll);
+            EditorEvent.Run(AnimGraphEditor.EVENT_REBUILD);
         }
         
         private void ShowLabel(string text) {

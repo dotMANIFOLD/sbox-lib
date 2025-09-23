@@ -9,6 +9,7 @@ namespace MANIFOLD.AnimGraph.Editor {
     [EditorForAssetType(AnimGraph.EXTENSION)]
     public class AnimGraphEditor : Window, IAssetEditor {
         public const string CONTEXT_GRAPH = "MANIFOLD_AnimGraph_Graph";
+        public const string EVENT_REBUILD = "manifold.animgraph.editor.rebuild";
         
         private DockManager dock;
         

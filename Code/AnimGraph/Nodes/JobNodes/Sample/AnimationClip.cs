@@ -9,8 +9,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
     [Category(JobCategories.SAMPLING)]
     [ExposeToAnimGraph]
     public class AnimationClip : JobNode {
-        [Animation]
-        public string Animation { get; set; }
+        public AnimationRef Clip { get; set; } = new();
         [Title("Playback Speed")]
         public ParameterRef<float> PlaybackSpeedParameter { get; set; } = new();
         [Title("Fallback Value"), HideIfValid(nameof(PlaybackSpeedParameter))]
@@ -19,24 +18,40 @@ namespace MANIFOLD.AnimGraph.Nodes {
         public bool Interpolated { get; set; } = true;
         
         [JsonIgnore, Hide]
-        public override string DisplayName => $"Animation Clip: {Animation}";
+        public override string DisplayName => $"Animation Clip: {Clip.Name}";
         [JsonIgnore, Hide]
         public override Color AccentColor => JobCategories.SAMPLING_COLOR;
-
-        public AnimationClip() {
-            
-        }
         
         public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
             var job = new SampleJob(ID);
-            job.Animation = Animation;
+            
+            // CLIP
+            switch (Clip.Mode) {
+                case ResourceRef.RefMode.Named: {
+                    job.Clip = ctx.resources.Animations.FirstOrDefault(x => x.Name == Clip.Name);
+                    break;
+                }
+                case ResourceRef.RefMode.Direct: {
+                    job.Clip = Clip.DirectReference;
+                    break;
+                }
+                default: {
+                    Log.Warning($"Unhandled ResourceRef mode: {Clip.Mode}");
+                    break;
+                }
+            }
+            
+            // SPEED PARAMETER
             if (PlaybackSpeedParameter.IsValid()) {
                 job.PlaybackSpeedParameter = ctx.parameters.Get<float>(PlaybackSpeedParameter.ID.Value);
             } else {
                 job.PlaybackSpeed = PlaybackSpeed;
             }
+            
+            // OTHER PARAMETERS
             job.Looping = Looping;
             job.Interpolate = Interpolated;
+            
             return job;
         }
 
