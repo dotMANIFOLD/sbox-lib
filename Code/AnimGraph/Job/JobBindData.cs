@@ -8,6 +8,7 @@ namespace MANIFOLD.AnimGraph {
         public readonly SkinnedModelRenderer target;
         
         public readonly Pose bindPose;
+        public readonly Pose zeroPose;
         public IReadOnlyDictionary<string, int> remapTable;
 
         public JobBindData(AnimGraphResources animations, SkinnedModelRenderer target) {
@@ -17,6 +18,7 @@ namespace MANIFOLD.AnimGraph {
             var data = ModelPersistentData.Get(target.Model);
             remapTable = data.remapTable;
             bindPose = data.bindPose;
+            zeroPose = data.zeroPose;
         }
     }
 }

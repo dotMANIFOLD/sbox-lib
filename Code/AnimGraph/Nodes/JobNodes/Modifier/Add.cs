@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using System.Text.Json.Serialization;
+using MANIFOLD.AnimGraph.Jobs;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Nodes {
@@ -24,11 +25,14 @@ namespace MANIFOLD.AnimGraph.Nodes {
         public override Color AccentColor => JobCategories.MODIFIER_COLOR;
         
         public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
-            throw new System.NotImplementedException();
+            var job = new AddJob(ID);
+            job.ResetChild1 = ResetBaseChild;
+            job.ResetChild2 = ResetAdditiveChild;
+            return job;
         }
 
         public override IEnumerable<NodeRef> GetInputs() {
-            throw new System.NotImplementedException();
+            return [Base, Additive];
         }
     }
 }

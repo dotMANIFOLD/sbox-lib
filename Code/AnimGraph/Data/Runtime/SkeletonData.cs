@@ -11,7 +11,7 @@ namespace MANIFOLD.AnimGraph {
         public int BoneCount => data.Length;
         
         public SkeletonData(SkeletonData<T> other) {
-            data = other.data.ToArray();
+            data = (T[])other.data.Clone();
             remapTable = other.remapTable;
         }
 

@@ -6,6 +6,7 @@ namespace MANIFOLD.AnimGraph {
         public class Data {
             public Dictionary<string, int> remapTable;
             public Pose bindPose;
+            public Pose zeroPose;
         }
 
         static ModelPersistentData() {
@@ -16,16 +17,17 @@ namespace MANIFOLD.AnimGraph {
 
         public static Data Create(Model model) {
             Dictionary<string, int> remap = new Dictionary<string, int>(model.BoneCount);
-            Transform[] bindPose = new Transform[model.BoneCount];
+            Transform[] bindTransforms = new Transform[model.BoneCount];
             for (int i = 0; i < model.BoneCount; ++i) {
                 var bone = model.Bones.AllBones[i];
                 remap.Add(bone.Name, i);
-                bindPose[i] = bone.Parent?.LocalTransform.ToLocal(bone.LocalTransform) ?? Transform.Zero;
+                bindTransforms[i] = bone.Parent?.LocalTransform.ToLocal(bone.LocalTransform) ?? Transform.Zero;
             }
 
             var data = new Data() {
                 remapTable = remap,
-                bindPose = new Pose(bindPose, remap)
+                bindPose = new Pose(bindTransforms, remap),
+                zeroPose = new Pose(new Transform[model.BoneCount], remap)
             };
             dictionary[model] = data;
             return data;
