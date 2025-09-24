@@ -5,7 +5,7 @@ using Sandbox;
 namespace MANIFOLD.AnimGraph {
     /// <summary>
     /// Please use <see cref="ParameterRef{T}"/>
-    /// </summary>/
+    /// </summary>
     public record ParameterRef(Guid? ID) : IValid {
         public Guid? ID { get; set; } = ID;
         

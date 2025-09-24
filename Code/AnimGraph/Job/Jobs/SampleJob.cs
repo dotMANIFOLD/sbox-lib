@@ -19,7 +19,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         internal float graphPlaybackSpeed = 1;
         
         private SkeletonData<TrackGroup> trackCache;
-        private Pose cachedPose;
+        private Pose workingPose;
         private List<Output<JobResults>> outputs = new List<Output<JobResults>>();
 
         public Guid ID { get; }
@@ -75,7 +75,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         
         public void Bind() {
             trackCache = new SkeletonData<TrackGroup>(BindData.remapTable);
-            cachedPose = BindData.bindPose.Clone();
+            workingPose = BindData.bindPose.Clone();
 
             CacheAnimation();
         }
@@ -96,26 +96,27 @@ namespace MANIFOLD.AnimGraph.Jobs {
             int lastFrame = frame.FloorToInt();
             float lerpFactor = frame - lastFrame;
 
-            for (int i = 0; i < BindData.bindPose.BoneCount; i++) {
-                Transform transform = BindData.bindPose[i];
+            for (int i = 0; i < workingPose.BoneCount; i++) {
+                BoneTransform transform = workingPose[i];
+                Transform local = transform.LocalTransform;
                 var group = trackCache[i];
                 
                 if (group.position != null) {
-                    transform.Position = group.position.Get(lastFrame);
+                    local.Position = group.position.Get(lastFrame);
                     if (Interpolate) {
                         var next = group.position.GetNext(lastFrame);
-                        transform.Position = transform.Position.LerpTo(next, lerpFactor);
+                        local.Position = local.Position.LerpTo(next, lerpFactor);
                     }
                 }
                 if (group.rotation != null) {
-                    transform.Rotation = group.rotation.Get(lastFrame);
+                    local.Rotation = group.rotation.Get(lastFrame);
                     if (Interpolate) {
                         var next = group.rotation.GetNext(lastFrame);
-                        transform.Rotation = transform.Rotation.SlerpTo(next, lerpFactor);
+                        local.Rotation = local.Rotation.SlerpTo(next, lerpFactor);
                     }
                 }
-                
-                cachedPose[i] = transform;
+
+                transform.LocalTransform = local;
             }
             Time += Context.deltaTime * RealPlaybackSpeed;
             
@@ -127,7 +128,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 }
             }
 
-            OutputData = new JobResults(cachedPose, Time / clip.FrameRate, !Looping && Time >= clip.Duration);
+            OutputData = new JobResults(workingPose, Time / clip.FrameRate, !Looping && Time >= clip.Duration);
         }
 
         private void CacheAnimation() {

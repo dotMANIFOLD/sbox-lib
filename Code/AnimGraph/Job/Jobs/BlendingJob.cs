@@ -65,7 +65,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 float cyclePos = job?.OutputData.CyclePosition ?? 0;
 
                 workingPose.Transform(inputPose, (_, current, other) => {
-                    return current.LerpTo(other, weight);
+                    current.LocalTransform = current.LocalTransform.LerpTo(other.LocalTransform, weight);
                 });
                 cycleResult = cycleResult.LerpTo(cyclePos, weight);
             }

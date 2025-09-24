@@ -26,8 +26,8 @@ namespace MANIFOLD.AnimGraph {
 
             var data = new Data() {
                 remapTable = remap,
-                bindPose = new Pose(bindTransforms, remap),
-                zeroPose = new Pose(new Transform[model.BoneCount], remap)
+                bindPose = new Pose(model, remap),
+                zeroPose = new Pose(model, remap, false)
             };
             dictionary[model] = data;
             return data;

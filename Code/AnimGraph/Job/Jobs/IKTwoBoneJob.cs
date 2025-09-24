@@ -56,13 +56,13 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
 
         public override void Run() {
-            Pose inputPose = inputs[0].Job.OutputData.Pose;
-            Transform transRoot = inputPose[rootBone];
-            Transform transMid = inputPose[midBone];
-            Transform transTip = inputPose[tipBone];
-            float lengthRootMid = transRoot.Position.Distance(transMid.Position);
-            float lengthMidTip = transMid.Position.Distance(transTip.Position);
-            float lengthRootTarget = transRoot.Position.Distance(Target);
+            // Pose inputPose = inputs[0].Job.OutputData.Pose;
+            // Transform transRoot = inputPose[rootBone];
+            // Transform transMid = inputPose[midBone];
+            // Transform transTip = inputPose[tipBone];
+            // float lengthRootMid = transRoot.Position.Distance(transMid.Position);
+            // float lengthMidTip = transMid.Position.Distance(transTip.Position);
+            // float lengthRootTarget = transRoot.Position.Distance(Target);
         }
     }
 }

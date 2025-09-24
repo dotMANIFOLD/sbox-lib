@@ -43,8 +43,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
             if (Weights != null && !Blend.AlmostEqual(0)) {
                 workingPose.Transform(maskedPose, (name, original, other) => {
                     var weight = Weights[name] * Blend;
-                    if (weight.AlmostEqual(0)) return original;
-                    return original.LerpTo(other, weight);
+                    if (weight.AlmostEqual(0)) return;
+                    original.LocalTransform = original.LocalTransform.LerpTo(other.LocalTransform, weight);
                 });
             }
 

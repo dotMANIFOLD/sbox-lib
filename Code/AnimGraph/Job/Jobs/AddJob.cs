@@ -18,7 +18,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             workingPose.CopyFrom(basePose);
             workingPose.Transform(additivePose, (_, original, additive) => {
-                return Transform.Concat(original, additive);
+                original.LocalTransform = Transform.Concat(original.LocalTransform, additive.LocalTransform);
             });
 
             if (Inputs[0].Job != null) {

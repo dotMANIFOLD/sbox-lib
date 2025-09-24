@@ -31,15 +31,10 @@ namespace MANIFOLD.AnimGraph.Jobs {
         
         public void Run() {
             if (!BindData.target.IsValid()) return;
-            Pose pose = inputs[0].Job.OutputData.Pose;
-            SetBone(pose, BindData.target.Model.Bones.Root, Transform.Zero);
-        }
-        
-        private void SetBone(Pose pose, BoneCollection.Bone bone, Transform parent) {
-            Transform result = Transform.Concat(parent, pose[bone.Name]);
-            BindData.target.SetBoneTransform(bone, result);
-            foreach (var child in bone.Children) {
-                SetBone(pose, child, result);
+            Pose pose = inputs[0].Job?.OutputData.Pose ?? BindData.bindPose;
+
+            for (int i = 0; i < pose.BoneCount; i++) {
+                BindData.target.SetBoneTransform(BindData.target.Model.Bones.AllBones[i], pose[i].ModelTransform);
             }
         }
         
