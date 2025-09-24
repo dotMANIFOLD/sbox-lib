@@ -42,7 +42,10 @@ namespace MANIFOLD.AnimGraph.Parameters {
                 Name = Name,
                 AutoReset = AutoReset,
                 backingField = backingField,
-                DefaultValue = DefaultValue
+                DefaultValue = DefaultValue,
+                HasRange = HasRange,
+                MinValue = MinValue,
+                MaxValue = MaxValue,
             };
         }
     }
@@ -50,13 +53,33 @@ namespace MANIFOLD.AnimGraph.Parameters {
     [ExposeToAnimGraph(Color = "#dfca1f")]
     [Title("Int")]
     public class IntParameter : Parameter<int> {
+        [Order(1000)]
+        public bool HasRange { get; set; }
+        [Title("Minimum"), ShowIf(nameof(HasRange), true), Order(1001)]
+        public int MinValue { get; set; }
+        [Title("Maximum"), ShowIf(nameof(HasRange), true), Order(1002)]
+        public int MaxValue { get; set; }
+
+        public override int Value {
+            get => base.Value;
+            set {
+                if (HasRange) {
+                    value = value.Clamp(MinValue, MaxValue);
+                }
+                base.Value = value;
+            }
+        }
+        
         public override Parameter Clone() {
             return new IntParameter() {
                 ID = ID,
                 Name = Name,
                 AutoReset = AutoReset,
                 backingField = backingField,
-                DefaultValue = DefaultValue
+                DefaultValue = DefaultValue,
+                HasRange = HasRange,
+                MinValue = MinValue,
+                MaxValue = MaxValue,
             };
         }
     }

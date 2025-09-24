@@ -51,6 +51,13 @@ namespace MANIFOLD.AnimGraph.Editor {
                     floatControl.MakeRanged(range, 0, false, true);
                 }
                 return floatControl;
+            } else if (param is IntParameter intParam) {
+                var intControl = new IntegerControlWidget(valueProp);
+                if (intParam.HasRange) {
+                    var range = new Vector2(intParam.MinValue, intParam.MaxValue);
+                    intControl.MakeRanged(range, 1, false, true);
+                }
+                return intControl;
             }
 
             return ControlWidget.Create(valueProp);
