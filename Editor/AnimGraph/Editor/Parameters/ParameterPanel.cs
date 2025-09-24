@@ -6,6 +6,9 @@ using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class ParameterPanel : Widget {
+        public const string EVENT_PREFIX = $"{AnimGraphEditor.EVENT_PREFIX}.parameters";
+        public const string EVENT_REFRESH = $"{EVENT_PREFIX}.refresh";
+        
         private record CreateOption(TypeDescription Type, string Name, Color Color);
 
         private readonly AnimGraphEditor editor;
@@ -76,6 +79,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         private void AddParameter(TypeDescription type) {
             var instance = (Parameter)Activator.CreateInstance(type.TargetType); // TypeDescription has a create function but it doesnt feel like working
             editor.GraphResource.Parameters.Add(instance.ID, instance);
+            table.Rebuild();
         }
     }
 }

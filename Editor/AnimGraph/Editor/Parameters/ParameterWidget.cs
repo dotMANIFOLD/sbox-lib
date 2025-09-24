@@ -65,8 +65,8 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         protected override void OnContextMenu(ContextMenuEvent e) {
             ContextMenu menu = new ContextMenu(this);
-            menu.AddOption("Duplicate", "content_copy", () => OnDuplicate?.Invoke(this));
-            menu.AddOption("Delete", "delete", () => OnDelete?.Invoke(this));
+            menu.AddOption("Duplicate", "content_copy", DuplicateParameter);
+            menu.AddOption("Delete", "delete", DeleteParameter);
             menu.OpenAt(e.ScreenPosition);
         }
 
@@ -114,6 +114,18 @@ namespace MANIFOLD.AnimGraph.Editor {
                 Paint.SetPen(Theme.Text);
                 Paint.DrawText(nameRect, param.Name, TextFlag.LeftCenter);
             }
+        }
+
+        private void DuplicateParameter() {
+            var clone = Parameter.Clone();
+            clone.ID = Guid.NewGuid();
+            editor.GraphResource.Parameters.Add(clone.ID, clone);
+            EditorEvent.Run(ParameterPanel.EVENT_REFRESH);
+        }
+
+        private void DeleteParameter() {
+            editor.GraphResource.Parameters.Remove(Parameter.ID);
+            EditorEvent.Run(ParameterPanel.EVENT_REFRESH);
         }
         
         private void GetRenderValues() {

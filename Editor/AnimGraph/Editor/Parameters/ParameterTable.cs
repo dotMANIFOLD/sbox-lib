@@ -14,17 +14,18 @@ namespace MANIFOLD.AnimGraph.Editor {
             gridLayout.HorizontalSpacing = 2;
             gridLayout.SizeConstraint = SizeConstraint.SetMaximumSize;
             gridLayout.SetColumnStretch(1, 0);
-            gridLayout.SetMinimumColumnWidth(0, 140);
+            gridLayout.SetMinimumColumnWidth(0, 200);
             
             Layout = gridLayout;
         }
 
         [Event(AnimGraphEditor.EVENT_PREVIEW)]
         [Event(AnimGraphEditor.EVENT_GRAPH_LOAD)]
+        [Event(ParameterPanel.EVENT_REFRESH)]
         public void Rebuild() {
             gridLayout.Clear(true);
 
-            gridLayout.SetColumnStretch(4, editor.InPreview ? 1 : 0);
+            gridLayout.SetColumnStretch(1, editor.InPreview ? 1 : 0);
             
             int row = 0;
             foreach (var param in editor.GraphResource.Parameters.Values) {
