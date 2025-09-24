@@ -1,111 +1,59 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Editor;
+﻿using Editor;
+using MANIFOLD.AnimGraph.Parameters;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class ParameterTable : Widget {
-        private record CreateOption(TypeDescription Type, string Name, Color Color);
-
         private readonly AnimGraphEditor editor;
-
-        private Widget canvas;
-        private Dictionary<Parameter, ParameterWidget> widgets;
+        private readonly GridLayout gridLayout;
         
-        public ParameterTable(AnimGraphEditor editor) : base(editor) {
+        public ParameterTable(AnimGraphEditor editor) : base(null) {
             this.editor = editor;
-            editor.OnGraphReload += RebuildList;
-            
-            Name = "ParameterList";
-            WindowTitle = "Parameters";
 
-            Layout = Layout.Column();
-            Layout.Margin = 2;
-            Layout.Spacing = 4;
-
-            var row = Layout.AddRow();
-            var addButton = row.Add(new Button("Add", "add"));
-            addButton.Clicked = ShowAddMenu;
-            row.AddStretchCell();
-
-            var scroll = new ScrollArea(this);
-            canvas = scroll.Canvas = new Widget(scroll);
-            canvas.Layout = Layout.Column();
-            canvas.SetSizeMode(SizeMode.Default, SizeMode.Flexible);
+            gridLayout = Layout.Grid();
+            gridLayout.HorizontalSpacing = 2;
+            gridLayout.SizeConstraint = SizeConstraint.SetMaximumSize;
+            gridLayout.SetColumnStretch(1, 0);
+            gridLayout.SetMinimumColumnWidth(0, 140);
             
-            Layout.Add(scroll);
-            
-            widgets = new Dictionary<Parameter, ParameterWidget>();
+            Layout = gridLayout;
         }
 
-        public void RebuildList() {
-            canvas.Layout.Clear(true);
-            widgets.Clear();
+        [Event(AnimGraphEditor.EVENT_PREVIEW)]
+        [Event(AnimGraphEditor.EVENT_GRAPH_LOAD)]
+        public void Rebuild() {
+            gridLayout.Clear(true);
 
+            gridLayout.SetColumnStretch(4, editor.InPreview ? 1 : 0);
+            
+            int row = 0;
             foreach (var param in editor.GraphResource.Parameters.Values) {
-                var widget = new ParameterWidget(canvas);
+                var widget = new ParameterWidget(editor);
                 widget.Parameter = param;
-                widget.OnSelected += ParameterSelectCallback;
-                canvas.Layout.Add(widget);
-                widgets.Add(param, widget);
-            }
-            canvas.Layout.AddStretchCell();
-        }
-
-        public void OnSelectionChanged(Parameter previous, Parameter current) {
-            foreach (var widget in widgets.Values) {
-                widget.Selected = false;
-                widget.Update();
-            }
-            if (current != null) {
-                widgets[current].Selected = true;
-                widgets[current].Update();
-            }
-        }
-        
-        private void ParameterSelectCallback(ParameterWidget widget) {
-            editor.SelectedParameter = widget.Parameter;
-        }
-        
-        private void ShowAddMenu() {
-            ContextMenu menu = new ContextMenu(this);
-
-            List<CreateOption> options = new List<CreateOption>();
-            
-            var baseType = EditorTypeLibrary.GetType(typeof(Parameter<>));
-            var types = EditorTypeLibrary.GetTypes(typeof(Parameter));
-            Log.Info($"Type count: {types.Count()}");
-            foreach (var type in types) {
-                var attr = type.GetAttribute<ExposeToAnimGraphAttribute>();
-                if (attr == null) continue;
-                if (type.BaseType != baseType) continue;
+                gridLayout.AddCell(0, row, widget);
                 
-                var arg = type.TargetType.BaseType.GenericTypeArguments[0];
-                var name = type.GetAttribute<TitleAttribute>()?.Value ?? arg.Name;
-                
-                options.Add(new CreateOption(type, name, attr.Color));
-            }
-
-            for (int i = 0; i < options.Count; i++) {
-                var option = options[i];
-                var widget = menu.AddOption($"{option.Name} Parameter", null, () => AddParameter(option.Type));
-
-                var tempIcon = new Pixmap(16);
-                using (Paint.ToPixmap(tempIcon)) {
-                    Paint.SetBrushAndPen(option.Color);
-                    Paint.DrawRect(new Rect(4, 0, 6, 16));
+                if (editor.InPreview) {
+                    var serialized = editor.PreviewAnimator.Parameters.Get(param.ID).GetSerialized();
+                    var prop = serialized.GetProperty("Value");
+                    var control = CreateControlWidget(param, prop);
+                    control.HorizontalSizeMode = SizeMode.Default;
+                    gridLayout.AddCell(1, row, control);
                 }
-                widget.SetIcon(tempIcon);
+                row++;
             }
-            
-            menu.OpenAtCursor();
         }
 
-        private void AddParameter(TypeDescription type) {
-            var instance = (Parameter)Activator.CreateInstance(type.TargetType); // TypeDescription has a create function but it doesnt feel like working
-            editor.GraphResource.Parameters.Add(instance.ID, instance);
-            RebuildList();
+        private ControlWidget CreateControlWidget(Parameter param, SerializedProperty valueProp) {
+            if (param is FloatParameter floatParam) {
+                var floatControl = new FloatControlWidget(valueProp);
+                if (floatParam.HasRange) {
+                    var range = new Vector2(floatParam.MinValue, floatParam.MaxValue);
+                    floatControl.MakeRanged(range, 0, false, true);
+                }
+                return floatControl;
+            }
+
+            return ControlWidget.Create(valueProp);
         }
     }
 }

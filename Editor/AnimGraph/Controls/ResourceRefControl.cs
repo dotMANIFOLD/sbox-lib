@@ -48,7 +48,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         protected abstract IEnumerable<string> GetAvailableNames();
         
         
-        [Event(AnimGraphEditor.EVENT_REBUILD)]
+        [Event(InspectorPanel.EVENT_REBUILD)]
         private void RebuildControl() {
             body.Clear(true);
 

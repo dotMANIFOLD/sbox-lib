@@ -10,6 +10,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         private PreviewRenderer renderer;
         private IconButton stateButton;
         private IconButton pauseButton;
+
+        public PreviewRenderer Renderer => renderer;
         
         public PreviewPanel(AnimGraphEditor editor) : base(editor) {
             this.editor = editor;
@@ -56,7 +58,8 @@ namespace MANIFOLD.AnimGraph.Editor {
             if (renderer.IsPlaying) renderer.Stop();
             else renderer.Play();
             UpdateStateButton();
-            UpdatePauseButton();    
+            UpdatePauseButton();
+            editor.InPreview = renderer.IsPlaying;
         }
 
         private void OnPause() {

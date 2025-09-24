@@ -7,6 +7,9 @@ using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class InspectorPanel : Widget {
+        public const string EVENT_PREFIX = $"{AnimGraphEditor.EVENT_PREFIX}.inspector";
+        public const string EVENT_REBUILD = $"{EVENT_PREFIX}.rebuild";
+        
         public const string EMPTY_LABEL = "Select a node to view it's properties...";
 
         private readonly AnimGraphEditor editor;
@@ -89,7 +92,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             scroll.Canvas.Layout.AddStretchCell();
             
             Layout.Add(scroll);
-            EditorEvent.Run(AnimGraphEditor.EVENT_REBUILD);
+            EditorEvent.Run(EVENT_REBUILD);
         }
         
         private void ShowLabel(string text) {

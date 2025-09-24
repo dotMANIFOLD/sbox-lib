@@ -8,6 +8,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         public const float COLOR_WIDTH = 8;
         public const float PADDING = 8;
         public const float TYPE_WIDTH = 60;
+
+        private readonly AnimGraphEditor editor;
         
         private Parameter param;
         
@@ -22,22 +24,22 @@ namespace MANIFOLD.AnimGraph.Editor {
                 GetRenderValues();
             }
         }
-
-        public bool Selected { get; set; }
         
-        public Action<ParameterWidget> OnSelected { get; set; }
         public Action<ParameterWidget> OnDuplicate { get; set; }
         public Action<ParameterWidget> OnDelete { get; set; }
         
-        public ParameterWidget(Widget parent = null) : base(parent) {
-            Layout = Layout.Row();
+        public ParameterWidget(AnimGraphEditor editor, Widget parent = null) : base(parent) {
+            this.editor = editor;
+            
             FixedHeight = 24;
-            SetSizeMode(SizeMode.Flexible, SizeMode.CanGrow);
+            FocusMode = FocusMode.Click;
+            
+            Layout = Layout.Row();
         }
-
-        protected override void OnMouseClick(MouseEvent e) {
-            Selected = true;
-            OnSelected?.Invoke(this);
+        
+        protected override void OnFocus(FocusChangeReason reason) {
+            base.OnFocus(reason);
+            editor.SelectedParameter = Parameter;
         }
 
         protected override void OnDoubleClick(MouseEvent e) {
@@ -71,16 +73,11 @@ namespace MANIFOLD.AnimGraph.Editor {
         protected override void OnPaint() {
             Rect rect = LocalRect.Shrink(0, 0, 1, 1);
             
-            Paint.SetBrush(Selected ? Theme.SelectedBackground : Theme.BaseAlt);
+            Paint.SetBrush(IsFocused ? Theme.SelectedBackground : Theme.BaseAlt);
             Paint.SetPen(Theme.SurfaceLightBackground);
             Paint.DrawRect(rect);
 
             rect = rect.Shrink(1, 1, 0, 0);
-            
-            // if (Selected) {
-            //     Paint.SetBrushAndPen(Theme.SelectedBackground);
-            //     Paint.DrawRect(rect);
-            // }
 
             Rect colorRect = rect;
             colorRect.Width = COLOR_WIDTH;
@@ -112,6 +109,8 @@ namespace MANIFOLD.AnimGraph.Editor {
             
                 // NAME
                 nameRect = rect.Shrink(TYPE_WIDTH + PADDING + 2 + PADDING, 0, 0, 0);
+                var nameSize = Paint.MeasureText(param.Name);
+                nameRect.Width = MathF.Max(nameSize.x, 120);
                 Paint.SetPen(Theme.Text);
                 Paint.DrawText(nameRect, param.Name, TextFlag.LeftCenter);
             }

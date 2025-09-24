@@ -9,14 +9,18 @@ namespace MANIFOLD.AnimGraph.Editor {
     [EditorForAssetType(AnimGraph.EXTENSION)]
     public class AnimGraphEditor : Window, IAssetEditor {
         public const string CONTEXT_GRAPH = "MANIFOLD_AnimGraph_Graph";
-        public const string EVENT_REBUILD = "manifold.animgraph.editor.rebuild";
+        public const string CONTEXT_IN_PREVIEW = "MANIFOLD_AnimGraph_InPreview";
+
+        public const string EVENT_PREFIX = "manifold.animgraph.editor";
+        public const string EVENT_GRAPH_LOAD = $"{EVENT_PREFIX}.graphload";
+        public const string EVENT_PREVIEW = $"{EVENT_PREFIX}.preview";
         
         private DockManager dock;
         
         private PreviewPanel previewPanel;
         private InspectorPanel inspectorPanel;
         private ResourcePanel resourcePanel;
-        private ParameterTable parameterTable;
+        private ParameterPanel parameterPanel;
         private TagList tagList;
         private AnimGraphView graphView;
 
@@ -28,6 +32,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         private IEnumerable<Guid> selectedNodeGuids;
         private Parameter selectedParameter;
         private Guid? selectedParameterGuid;
+
+        private bool inPreview;
         
         public Asset GraphAsset => graphAsset;
         public AnimGraph GraphResource => graphResource;
@@ -44,7 +50,6 @@ namespace MANIFOLD.AnimGraph.Editor {
                 selectedParameterGuid = null;
                 
                 inspectorPanel.SetNodes(value);
-                parameterTable.OnSelectionChanged(oldParam, null);
             }
         }
         public Parameter SelectedParameter {
@@ -59,11 +64,22 @@ namespace MANIFOLD.AnimGraph.Editor {
                 
                 graphView.ClearSelection();
                 inspectorPanel.SetParameter(value);
-                parameterTable.OnSelectionChanged(oldParam, value);
             }
         }
+
+        public bool InPreview {
+            get => inPreview;
+            set {
+                inPreview = value;
+                PreviewAnimator = value ? previewPanel.Renderer.Animator : null;
+                SetContext(CONTEXT_IN_PREVIEW, value);
+
+                graphView.ReadOnly = value;
+                EditorEvent.Run(EVENT_PREVIEW);
+            }
+        }
+        public MANIFOLDAnimator PreviewAnimator { get; private set; }
         
-        public bool InPreview { get; set; }
         public bool ShowDebugInfo { get; set; }
         
         public event Action OnGraphReload;
@@ -99,6 +115,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             graphWrapper = new GraphWrapper(GraphResource);
             
             SetContext(CONTEXT_GRAPH, graphResource);
+            EditorEvent.Run(EVENT_GRAPH_LOAD);
             OnGraphReload?.Invoke();
             Focus();
         }
@@ -139,7 +156,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             previewPanel = new PreviewPanel(this);
             inspectorPanel = new InspectorPanel(this);
             resourcePanel = new ResourcePanel(this);
-            parameterTable = new ParameterTable(this);
+            parameterPanel = new ParameterPanel(this);
             tagList = new TagList();
             graphView = new AnimGraphView(this);
             
@@ -147,7 +164,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             dock.RegisterDockType("Preview", null, () => previewPanel = new PreviewPanel(this));
             dock.RegisterDockType("Inspector", null, () => inspectorPanel = new InspectorPanel(this));
-            dock.RegisterDockType("ParameterList", null, () => parameterTable = new ParameterTable(this));
+            dock.RegisterDockType("ParameterList", null, () => parameterPanel = new ParameterPanel(this));
             dock.RegisterDockType("TagList", null, () => tagList = new TagList());
             
             dock.AddDock(null, graphView, DockArea.Right, DockManager.DockProperty.HideCloseButton);
@@ -155,10 +172,10 @@ namespace MANIFOLD.AnimGraph.Editor {
             dock.AddDock(graphView, inspectorPanel, DockArea.Right, DockManager.DockProperty.HideOnClose, split: 0.2f);
             dock.AddDock(inspectorPanel, resourcePanel, DockArea.Inside, DockManager.DockProperty.HideOnClose);
             dock.RaiseDock(inspectorPanel);
-            dock.AddDock(previewPanel, parameterTable, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
-            dock.AddDock(parameterTable, tagList, DockArea.Inside, DockManager.DockProperty.HideOnClose);
+            dock.AddDock(previewPanel, parameterPanel, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
+            dock.AddDock(parameterPanel, tagList, DockArea.Inside, DockManager.DockProperty.HideOnClose);
 
-            dock.RaiseDock(parameterTable);
+            dock.RaiseDock(parameterPanel);
             
             dock.Update();
         }

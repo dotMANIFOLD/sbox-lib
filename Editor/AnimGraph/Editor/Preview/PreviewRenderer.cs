@@ -30,6 +30,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         public float TimeScale { get; set; } = 1f;
         public bool IsPlaying => playing;
         public bool Paused => paused;
+
+        public MANIFOLDAnimator Animator => animator;
         
         public PreviewRenderer(Widget parent) : base(parent) {
             SetSizeMode(SizeMode.Default, SizeMode.Flexible);
