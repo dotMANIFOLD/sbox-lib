@@ -6,9 +6,7 @@ namespace MANIFOLD.AnimGraph {
     /// <summary>
     /// Serializable reference to another node.
     /// </summary>
-    public record NodeRef(Guid? ID = null) : IValid {
-        public Guid? ID { get; set; } = ID;
-        
+    public record struct NodeRef(Guid? ID = null) : IValid {
         [JsonIgnore]
         public bool IsValid => ID.HasValue;
 
@@ -22,6 +20,10 @@ namespace MANIFOLD.AnimGraph {
         }
     }
     
+    /// <summary>
+    /// Provider for references. Used when nodes need extra data per reference.
+    /// </summary>
+    /// <remarks>Your reference must be named <c>Reference</c></remarks>
     public interface INodeRefProvider {
         public NodeRef Reference { get; }
     }

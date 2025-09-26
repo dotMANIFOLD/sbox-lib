@@ -105,6 +105,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
         private bool DefaultSheetFilter(SerializedProperty property) {
             if (property.HasAttribute<HideAttribute>()) return false;
+            if (!property.IsPublic) return false;
             return true;
         }
         
@@ -118,7 +119,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             if (!validType) return;
             
             changingCollection = true;
-            oldCollectionCount = property.GetValue<IEnumerable<object>>().Count();
+            oldCollectionCount = property.GetValue<IEnumerable<object>>()?.Count() ?? 0;
         }
         
         private void OnPropertyChanged(SerializedProperty property) {
@@ -132,7 +133,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             if (changingCollection) {
                 var enumerable = property.GetValue<IEnumerable<object>>();
-                int newCount = enumerable.Count();
+                int newCount = enumerable?.Count() ?? 0;
 
                 addCount = newCount - oldCollectionCount;
                 addOperation = addCount > 0;

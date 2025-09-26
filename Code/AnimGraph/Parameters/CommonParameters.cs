@@ -1,5 +1,4 @@
-﻿using MANIFOLD.Animation;
-using Sandbox;
+﻿using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Parameters {
     [ExposeToAnimGraph(Color = "#2b5bcb")]
@@ -83,7 +82,7 @@ namespace MANIFOLD.AnimGraph.Parameters {
             };
         }
     }
-
+    
     [ExposeToAnimGraph(Color = "#249a1e")]
     [Title("Vector")]
     public class VectorParameter : Parameter<Vector3> {

@@ -50,27 +50,31 @@ namespace MANIFOLD.AnimGraph.Editor {
     public class GraphPlugIn : GraphPlug, IPlugIn {
         private readonly GraphNode node;
         private DisplayInfo displayInfo;
-        private NodeRef reference;
+        private SerializedObject obj;
+        private SerializedProperty idProperty;
         
         public override string Identifier => $"{Node.Identifier}.In.{PlugIndex}";
         public override DisplayInfo DisplayInfo => displayInfo;
 
         public IPlugOut ConnectedOutput {
             get {
-                if (!reference.IsValid) return null;
-                return Node.Graph.Nodes[reference.ID.Value].Outputs.First();
+                if (!obj.IsValid) return null;
+                var id = idProperty.GetValue<Guid?>();
+                if (!id.HasValue) return null;
+                return Node.Graph.Nodes[id.Value].Outputs.First();
             }
             set {
                 var jobNode = ((GraphNode)value?.Node)?.RealNode;
-                reference.ID = jobNode?.ID;
+                idProperty.SetValue(jobNode?.ID);
                 node.Graph.ScanReachableNodes();
                 Log.Info($"Set connnection: {jobNode?.ID}");
             }
         }
 
-        public GraphPlugIn(GraphNode node, int plugIndex, NodeRef reference, DisplayInfo info) : base(node, plugIndex) {
+        public GraphPlugIn(GraphNode node, int plugIndex, SerializedObject obj, DisplayInfo info) : base(node, plugIndex) {
             this.node = node;
-            this.reference = reference;
+            this.obj = obj;
+            idProperty = obj.GetProperty(nameof(NodeRef.ID));
             this.displayInfo = info;
         }
         
@@ -98,11 +102,12 @@ namespace MANIFOLD.AnimGraph.Editor {
     public class GraphNode : INode {
         public enum InputOrigin { Property, Collection }
         
-        public record InputData(InputOrigin Origin, NodeRef Reference, DisplayInfo Info);
+        public record InputData(InputOrigin Origin, SerializedObject Object, DisplayInfo Info);
         
         protected GraphWrapper graph;
         protected JobNodeUI ui;
         protected JobNode realNode;
+        protected SerializedObject serialized;
         protected List<GraphPlugIn> inputs;
         protected List<GraphPlugOut> outputs;
 
@@ -137,6 +142,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         public GraphNode(GraphWrapper graph, JobNode realNode) {
             this.graph = graph;
             this.realNode = realNode;
+            serialized = realNode.GetSerialized();
             
             inputs = new List<GraphPlugIn>();
             outputs = new List<GraphPlugOut>();
@@ -144,7 +150,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             var nodeInputs = GetNodeInputs();
             for (int i = 0; i < nodeInputs.Count; i++) {
                 var input = nodeInputs[i];
-                inputs.Add(new GraphPlugIn(this, i, input.Reference, input.Info));
+                inputs.Add(new GraphPlugIn(this, i, input.Object, input.Info));
             }
             if (realNode is not FinalPose) {
                 outputs.Add(new GraphPlugOut(this, 0));
@@ -166,7 +172,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             } else {
                 for (int i = inputs.Count; i < nodeInputs.Count; i++) {
                     var input = nodeInputs[i];
-                    inputs.Add(new GraphPlugIn(this, i, input.Reference, input.Info));
+                    inputs.Add(new GraphPlugIn(this, i, input.Object, input.Info));
                 }
             }
             
@@ -211,47 +217,68 @@ namespace MANIFOLD.AnimGraph.Editor {
                 var attr = prop.GetCustomAttribute<InputAttribute>();
                 valid = attr != null;
                 if (!valid) continue;
+                var serializedProp = serialized.GetProperty(prop.Name);
+                
+                bool success = serializedProp.TryGetAsObject(out SerializedObject serializedObj);
+                if (!success) {
+                    Log.Warning($"Failed to convert property: {prop.Name}");
+                    continue;
+                }
                 
                 if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<NodeRef>))) {
                     // collection of references
-                    var col = (IEnumerable<NodeRef>)prop.GetValue(realNode);
-                    if (col == null) continue;
+                    var serializedCol = (SerializedCollection)serializedObj;
                     
                     int count = 0;
-                    foreach (var reference in col) {
-                        if (reference == null) continue;
+                    foreach (var colProp in serializedCol) {
+                        success = colProp.TryGetAsObject(out SerializedObject refObj);
+                        if (!success) {
+                            Log.Warning($"Failed to convert property in collection: {prop.Name}");
+                            continue;
+                        }
                         
                         DisplayInfo info = default;
                         info.Name = $"Slot {count}";
-                        inputs.Add(new InputData(InputOrigin.Collection, reference, info));
+                        inputs.Add(new InputData(InputOrigin.Collection, refObj, info));
                         count++;
                     }
                 } else if (prop.PropertyType.IsAssignableTo(typeof(IEnumerable<INodeRefProvider>))) {
                     // collection of providers
-                    var col = (IEnumerable<INodeRefProvider>)prop.GetValue(realNode);
-                    if (col == null) continue;
-
+                    var serializedCol = (SerializedCollection)serializedObj;
+                    
                     int count = 0;
-                    foreach (var provider in col) {
-                        if (provider == null) continue;
+                    foreach (var colProp in serializedCol) {
+                        success = colProp.TryGetAsObject(out SerializedObject providerObj);
+                        if (!success) {
+                            Log.Warning($"Failed to convert property in collection: {prop.Name}");
+                            continue;
+                        }
+
+                        string propName = typeof(INodeRefProvider).FullName + "." + nameof(INodeRefProvider.Reference);
+                        success = providerObj.GetProperty(propName).TryGetAsObject(out SerializedObject refObj);
+                        if (!success) {
+                            Log.Warning($"Failed to convert provider property in collection: {prop.Name}");
+                            continue;
+                        }
                         
                         DisplayInfo info = default;
                         info.Name = $"Slot {count}";
-                        inputs.Add(new InputData(InputOrigin.Collection, provider.Reference, info));
+                        inputs.Add(new InputData(InputOrigin.Collection, refObj, info));
                         count++;
                     }
                 } else if (prop.PropertyType.IsAssignableTo(typeof(NodeRef))) {
                     // reference
-                    var reference = (NodeRef)prop.GetValue(realNode);
-                    if (reference == null) continue;
-                    
-                    inputs.Add(new InputData(InputOrigin.Property, reference, DisplayInfo.ForMember(prop)));
+                    inputs.Add(new InputData(InputOrigin.Property, serializedObj, DisplayInfo.ForMember(prop)));
                 } else if (prop.PropertyType.IsAssignableTo(typeof(INodeRefProvider))) {
                     // provider
-                    var provider = (INodeRefProvider)prop.GetValue(realNode);
-                    if (provider == null) continue;
+                    string propName = typeof(INodeRefProvider).FullName + "." + nameof(INodeRefProvider.Reference);
+                    success = serializedObj.GetProperty(propName).TryGetAsObject(out SerializedObject refObj);
+                    if (!success) {
+                        Log.Warning($"Failed to convert provider property in collection: {prop.Name}");
+                        continue;
+                    }
                     
-                    inputs.Add(new InputData(InputOrigin.Property, provider.Reference, DisplayInfo.ForMember(prop)));
+                    inputs.Add(new InputData(InputOrigin.Property, refObj, DisplayInfo.ForMember(prop)));
                 } else {
                     Log.Warning("No matching type for this input!");
                 }
