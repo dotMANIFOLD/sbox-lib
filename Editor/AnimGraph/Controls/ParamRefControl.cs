@@ -6,8 +6,6 @@ using Sandbox;
 namespace MANIFOLD.AnimGraph.Editor {
     [CustomEditor(typeof(ParameterRef<>))]
     public class ParamRefControl : ControlWidget {
-        private SerializedProperty idProperty;
-        
         public ParamRefControl(SerializedProperty property) : base(property) {
             Layout = Layout.Column();
             Layout.Spacing = 4;
@@ -16,8 +14,6 @@ namespace MANIFOLD.AnimGraph.Editor {
             if (!success) {
                 throw new Exception("Failed to convert parameter ref to object");
             }
-
-            idProperty = serializedObj.GetProperty("ID");
             
             Rebuild();
         }
@@ -25,9 +21,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         [Event(InspectorPanel.EVENT_REBUILD)]
         private void Rebuild() {
             Layout.Clear(true);
-
-            if (idProperty == null) return;
-            Guid? propValue = idProperty.GetValue<Guid?>();
+            
+            var currentId = (Guid?)SerializedProperty.PropertyType.GetProperty("ID").GetValue(SerializedProperty.GetValue<object>());
             
             var type = SerializedProperty.PropertyType;
             var parameterType = type.GenericTypeArguments[0];
@@ -38,13 +33,20 @@ namespace MANIFOLD.AnimGraph.Editor {
                 var validParameters = graph.Parameters.Values.Where(x => x.GetType().IsAssignableTo(scanType));
                 
                 var comboBox = Layout.Add(new ComboBox(this));
-                comboBox.AddItem("<None>", onSelected: () => idProperty.SetValue((Guid?)null), selected: propValue == null);
+                comboBox.AddItem("<None>", onSelected: () => SerializedProperty.SetValue(CreateNewRef(null)), selected: currentId == null);
                 foreach (var param in validParameters) {
-                    comboBox.AddItem(param.Name, onSelected: () => idProperty.SetValue(param.ID), selected: propValue == param.ID);   
+                    comboBox.AddItem(param.Name, onSelected: () => SerializedProperty.SetValue(CreateNewRef(param.ID)), selected: currentId == param.ID);   
                 }
             } else {
-                Layout.Add(new Label(propValue.HasValue ? propValue.Value.ToString() : "None"));
+                Layout.Add(new Label(currentId.HasValue ? currentId.Value.ToString() : "None"));
             }
+        }
+
+        private object CreateNewRef(Guid? id) {
+            var newRef = Activator.CreateInstance(SerializedProperty.PropertyType);
+            var prop = newRef.GetType().GetProperty("ID");
+            prop.SetValue(newRef, id);
+            return newRef;
         }
     }
 }
