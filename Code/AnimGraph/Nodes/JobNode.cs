@@ -11,6 +11,9 @@ namespace MANIFOLD.AnimGraph {
         public const string SAMPLING = "Sampling";
         public const string SAMPLING_COLOR = "#b02bea";
 
+        public const string SEQUENCING = "Sequencing";
+        public const string SEQUENCING_COLOR = "#1243c9";
+        
         public const string BLEND = "Blend";
         public const string BLEND_COLOR = "#44c83f";
 
