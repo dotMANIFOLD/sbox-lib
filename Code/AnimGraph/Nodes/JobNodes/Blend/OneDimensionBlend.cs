@@ -8,6 +8,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
     /// <summary>
     /// A one-dimensional blend.
     /// </summary>
+    [Title("1D Blend")]
     [Category(JobCategories.BLEND)]
     [ExposeToAnimGraph]
     public class OneDimensionBlend : JobNode {

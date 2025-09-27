@@ -6,6 +6,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
     /// <summary>
     /// A two-dimensional blend.
     /// </summary>
+    [Title("2D Blend")]
     [Category(JobCategories.BLEND)]
     [ExposeToAnimGraph]
     public class TwoDimensionBlend : JobNode {
