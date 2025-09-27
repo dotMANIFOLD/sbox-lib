@@ -22,6 +22,7 @@ namespace MANIFOLD.AnimGraph {
         public Model model;
         public AnimGraphResources resources;
         public ParameterList parameters;
+        public TagList tags;
     }
     
     public abstract class JobNode : BaseNode {
