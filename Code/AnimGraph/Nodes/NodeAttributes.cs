@@ -7,7 +7,8 @@ namespace MANIFOLD.AnimGraph {
     }
     
     [AttributeUsage(AttributeTargets.Property)]
-    public class InputAttribute : Attribute {
-        
-    }
+    public class InputAttribute : Attribute { }
+    
+    [AttributeUsage(AttributeTargets.Property)]
+    public class UpdatesInputsAttribute : Attribute { }
 }

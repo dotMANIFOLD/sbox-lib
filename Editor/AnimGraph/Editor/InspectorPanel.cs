@@ -131,6 +131,12 @@ namespace MANIFOLD.AnimGraph.Editor {
                 }
             }
             
+            // ON UPDATES INPUT FIELD CHANGED
+            if (property.HasAttribute<UpdatesInputsAttribute>()) {
+                OnNodeInputChanged?.Invoke();
+            }
+            
+            // ON INPUT COLLECTION UPDATED
             if (changingCollection) {
                 var enumerable = property.GetValue<IEnumerable<object>>();
                 int newCount = enumerable?.Count() ?? 0;
