@@ -21,7 +21,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         private InspectorPanel inspectorPanel;
         private ResourcePanel resourcePanel;
         private ParameterPanel parameterPanel;
-        private TagList tagList;
+        private TagPanel tagPanel;
         private AnimGraphView graphView;
 
         private Asset graphAsset;
@@ -157,7 +157,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             inspectorPanel = new InspectorPanel(this);
             resourcePanel = new ResourcePanel(this);
             parameterPanel = new ParameterPanel(this);
-            tagList = new TagList();
+            tagPanel = new TagPanel(this);
             graphView = new AnimGraphView(this);
             
             inspectorPanel.OnNodeInputChanged += OnInputChanged;
@@ -165,7 +165,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             dock.RegisterDockType("Preview", null, () => previewPanel = new PreviewPanel(this));
             dock.RegisterDockType("Inspector", null, () => inspectorPanel = new InspectorPanel(this));
             dock.RegisterDockType("ParameterList", null, () => parameterPanel = new ParameterPanel(this));
-            dock.RegisterDockType("TagList", null, () => tagList = new TagList());
+            dock.RegisterDockType("TagList", null, () => tagPanel = new TagPanel(this));
             
             dock.AddDock(null, graphView, DockArea.Right, DockManager.DockProperty.HideCloseButton);
             dock.AddDock(graphView, previewPanel, DockArea.Left, DockManager.DockProperty.HideOnClose, split: 0.2f);
@@ -173,7 +173,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             dock.AddDock(inspectorPanel, resourcePanel, DockArea.Inside, DockManager.DockProperty.HideOnClose);
             dock.RaiseDock(inspectorPanel);
             dock.AddDock(previewPanel, parameterPanel, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
-            dock.AddDock(parameterPanel, tagList, DockArea.Inside, DockManager.DockProperty.HideOnClose);
+            dock.AddDock(parameterPanel, tagPanel, DockArea.Inside, DockManager.DockProperty.HideOnClose);
 
             dock.RaiseDock(parameterPanel);
             

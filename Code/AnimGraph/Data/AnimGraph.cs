@@ -19,6 +19,8 @@ namespace MANIFOLD.AnimGraph {
         public Dictionary<Guid, JobNode> Nodes { get; set; }
         [WideMode, ReadOnly, JsonIgnore]
         public Dictionary<Guid, Parameter> Parameters { get; set; }
+        [WideMode, ReadOnly, JsonIgnore]
+        public Dictionary<Guid, Tag> Tags { get; set; }
         
         [Hide]
         public JsonObject SerializedNodes {
@@ -35,6 +37,12 @@ namespace MANIFOLD.AnimGraph {
             get => Parameters.SerializePolymorphic();
             set => Parameters = value.DeserializePolymorphic<Guid, Parameter>();
         }
+
+        [Hide]
+        public JsonObject SerializedTags {
+            get => Tags.SerializePolymorphic();
+            set => Tags = value.DeserializePolymorphic<Guid, Tag>();
+        }
         
         [JsonIgnore, Hide]
         public FinalPose FinalPoseNode => (FinalPose)Nodes[Guid.AllBitsSet];
@@ -48,6 +56,7 @@ namespace MANIFOLD.AnimGraph {
         public AnimGraph() {
             Nodes = new Dictionary<Guid, JobNode>();
             Parameters = new Dictionary<Guid, Parameter>();
+            Tags = new Dictionary<Guid, Tag>();
             Nodes.Add(Guid.AllBitsSet, new FinalPose());
         }
         

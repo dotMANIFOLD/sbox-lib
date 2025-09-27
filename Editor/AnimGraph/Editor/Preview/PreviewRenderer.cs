@@ -63,6 +63,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         
         public void Play() {
             animator.RebuildParameters();
+            animator.RebuildTags();
             animator.RebuildGraph();
             animator.Play();
             time = 0;

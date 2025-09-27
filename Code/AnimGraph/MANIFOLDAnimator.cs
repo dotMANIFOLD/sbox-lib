@@ -18,6 +18,7 @@ namespace MANIFOLD.AnimGraph {
         private JobBindData bindData;
         private JobContext context;
         private ParameterList parameters;
+        private TagList tags;
         
         private OrderedJobGroup mainGroup;
         private ApplyToModelJob applyJob;
@@ -69,6 +70,10 @@ namespace MANIFOLD.AnimGraph {
         /// Access to this animator's parameters.
         /// </summary>
         public ParameterList Parameters => parameters;
+        /// <summary>
+        /// Access to this animator's tags.
+        /// </summary>
+        public TagList TagList => tags;
         
         public bool IsPlaying => isPlaying;
 
@@ -134,9 +139,8 @@ namespace MANIFOLD.AnimGraph {
             if (graph == null || renderer == null) return;
             
             if (mainGroup == null) {
-                if (parameters == null) {
-                    RebuildParameters();
-                }
+                if (parameters == null) RebuildParameters();
+                if (tags == null) RebuildTags();
                 RebuildGraph();
             }
             
@@ -171,6 +175,7 @@ namespace MANIFOLD.AnimGraph {
             ctx.model = Renderer.Model;
             ctx.resources = animations;
             ctx.parameters = parameters;
+            ctx.tags = tags;
 
             var animGraphJob = new AnimGraphJob(graph, ctx);
             animGraphJob.OutputTo(applyJob, 0);
@@ -196,6 +201,15 @@ namespace MANIFOLD.AnimGraph {
             if (graph == null) return;
             parameters = new ParameterList(graph);
             parameters.Reset();
+        }
+
+        /// <summary>
+        /// Rebuilds the underlying tag list. Shouldn't have to be called unless the AnimGraph's tags were modified.
+        /// </summary>
+        public void RebuildTags() {
+            if (graph == null) return;
+            tags = new TagList();
+            tags.AddGraph(graph);
         }
         
         private void PrepareTraverse(IBaseAnimJob job) {
