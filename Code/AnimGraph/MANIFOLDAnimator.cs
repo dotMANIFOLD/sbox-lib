@@ -190,6 +190,7 @@ namespace MANIFOLD.AnimGraph {
             }
 
             Bind();
+            applyJob.Reset();
             
             mainGroup.AddToDebug(GameObject.Name + "_Animator");
         }

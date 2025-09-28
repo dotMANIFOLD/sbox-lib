@@ -22,7 +22,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
         
         public void Reset() {
-            
+            var animJob = Inputs[0].Job as IAnimJob;
+            animJob?.Reset();
         }
 
         public void Prepare() {
