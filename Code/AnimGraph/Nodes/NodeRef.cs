@@ -26,5 +26,6 @@ namespace MANIFOLD.AnimGraph {
     /// <remarks>Your reference must be named <c>Reference</c></remarks>
     public interface INodeRefProvider {
         public NodeRef Reference { get; }
+        public string RefFieldName { get; }
     }
 }

@@ -20,6 +20,8 @@ namespace MANIFOLD.AnimGraph.Nodes {
             
             [JsonIgnore, Hide]
             NodeRef INodeRefProvider.Reference => Input;
+            [JsonIgnore, Hide]
+            string INodeRefProvider.RefFieldName => nameof(Input);
         }
 
         public ParameterRef<float> Parameter { get; set; } = new();

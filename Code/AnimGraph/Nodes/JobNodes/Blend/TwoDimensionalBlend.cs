@@ -17,6 +17,8 @@ namespace MANIFOLD.AnimGraph.Nodes {
             
             [JsonIgnore, Hide]
             NodeRef INodeRefProvider.Reference => Input;
+            [JsonIgnore, Hide]
+            string INodeRefProvider.RefFieldName => nameof(Input);
         }
         
         [Input, WideMode, InlineEditor]

@@ -51,7 +51,6 @@ namespace MANIFOLD.AnimGraph.Editor {
         private readonly GraphNode node;
         private DisplayInfo displayInfo;
         private SerializedObject obj;
-        private SerializedProperty idProperty;
         
         public override string Identifier => $"{Node.Identifier}.In.{PlugIndex}";
         public override DisplayInfo DisplayInfo => displayInfo;
@@ -59,22 +58,23 @@ namespace MANIFOLD.AnimGraph.Editor {
         public IPlugOut ConnectedOutput {
             get {
                 if (!obj.IsValid) return null;
-                var id = idProperty.GetValue<Guid?>();
+                var id = IDProperty.GetValue<Guid?>();
                 if (!id.HasValue) return null;
                 return Node.Graph.Nodes[id.Value].Outputs.First();
             }
             set {
                 var jobNode = ((GraphNode)value?.Node)?.RealNode;
-                idProperty.SetValue(jobNode?.ID);
+                IDProperty.SetValue(jobNode?.ID);
                 node.Graph.ScanReachableNodes();
                 Log.Info($"Set connnection: {jobNode?.ID}");
             }
         }
 
+        private SerializedProperty IDProperty => obj.GetProperty("ID");
+
         public GraphPlugIn(GraphNode node, int plugIndex, SerializedObject obj, DisplayInfo info) : base(node, plugIndex) {
             this.node = node;
             this.obj = obj;
-            idProperty = obj.GetProperty(nameof(NodeRef.ID));
             this.displayInfo = info;
         }
         
@@ -253,9 +253,9 @@ namespace MANIFOLD.AnimGraph.Editor {
                             Log.Warning($"Failed to convert property in collection: {prop.Name}");
                             continue;
                         }
-
-                        string propName = typeof(INodeRefProvider).FullName + "." + nameof(INodeRefProvider.Reference);
-                        success = providerObj.GetProperty(propName).TryGetAsObject(out SerializedObject refObj);
+                        var provider = colProp.GetValue<INodeRefProvider>();
+                        
+                        success = providerObj.GetProperty(provider.RefFieldName).TryGetAsObject(out SerializedObject refObj);
                         if (!success) {
                             Log.Warning($"Failed to convert provider property in collection: {prop.Name}");
                             continue;
