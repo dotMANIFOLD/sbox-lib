@@ -47,7 +47,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             base.SetLayerCount(count);
         }
 
-        public void DoTransition(int targetIndex) {
+        public virtual void DoTransition(int targetIndex) {
             if (targetIndex == activeInput) return;
             ArgumentOutOfRangeException.ThrowIfNegative(targetIndex, nameof(targetIndex));
             ArgumentOutOfRangeException.ThrowIfGreaterThanOrEqual(targetIndex, weights.Length, nameof(targetIndex));
@@ -75,7 +75,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             inTransition = true;
         }
 
-        private void FinishTransition() {
+        protected virtual void FinishTransition() {
             inTransition = false;
 
             if (!transitionInvertFade) {
