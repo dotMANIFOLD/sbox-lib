@@ -5,15 +5,14 @@ using Editor.NodeEditor;
 using Sandbox;
 
 namespace MANIFOLD.JobGraph.Editor {
-    public class JobGraphGroupUI : NodeUI {
+    public class GraphGroupUI : NodeUI {
         public const float MARGIN = 48f;
         
-        private readonly JobGraphNode node;
-        private readonly IEnumerable<NodeUI> contains;
+        private readonly GraphGroupNode node;
         
-        public JobGraphGroupUI(GraphView graph, JobGraphNode node, IEnumerable<NodeUI> contains) : base(graph, node) {
+        public GraphGroupUI(GraphView graph, GraphGroupNode node) : base(graph, node) {
             this.node = node;
-            this.contains = contains;
+            
             Selectable = false;
             Movable = false;
             HoverEvents = false;
@@ -21,10 +20,11 @@ namespace MANIFOLD.JobGraph.Editor {
         }
 
         protected override void Layout() {
-            if (contains == null) return;
+            if (node == null) return;
+            if (node.Containing == null) return;
             
-            Rect rect = contains.First().SceneRect;
-            foreach (var elem in contains.Skip(1)) {
+            Rect rect = node.Containing.First().SceneRect;
+            foreach (var elem in node.Containing.Skip(1)) {
                 rect.Add(elem.SceneRect);
             }
             rect = rect.Grow(MARGIN);
@@ -33,7 +33,7 @@ namespace MANIFOLD.JobGraph.Editor {
         
         protected override void OnPaint() {
             var rect = LocalRect.Shrink(1);
-            var color = node.Wrapper.GroupColors[node.Job.ID];
+            var color = node.GroupColor;
             Paint.SetPen(color);
             Paint.SetBrush(color.WithAlpha(0.1f));
             Paint.DrawRect(rect, 10);

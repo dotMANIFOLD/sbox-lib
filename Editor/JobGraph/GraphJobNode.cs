@@ -7,8 +7,8 @@ using MANIFOLD.Jobs;
 using Sandbox;
 
 namespace MANIFOLD.JobGraph.Editor {
-    public abstract class JobGraphPlug : IPlug {
-        public JobGraphNode Node { get; }
+    public abstract class GraphJobPlug : IPlug {
+        public GraphNode Node { get; }
         public int PlugIndex { get; }
         
         public abstract string Identifier { get; }
@@ -24,7 +24,7 @@ namespace MANIFOLD.JobGraph.Editor {
 
         INode IPlug.Node => Node;
 
-        public JobGraphPlug(JobGraphNode node, int plugIndex) {
+        public GraphJobPlug(GraphNode node, int plugIndex) {
             Node = node;
             PlugIndex = plugIndex;
         }
@@ -42,7 +42,7 @@ namespace MANIFOLD.JobGraph.Editor {
         }
     }
 
-    public class JobGraphPlugIn : JobGraphPlug, IPlugIn {
+    public class GraphJobPlugIn : GraphJobPlug, IPlugIn {
         private IInputSocket socket;
         private DisplayInfo displayInfo;
 
@@ -53,14 +53,14 @@ namespace MANIFOLD.JobGraph.Editor {
         public IPlugOut ConnectedOutput {
             get {
                 if (socket.Job == null) return null;
-                return Node.Wrapper.AllNodes[socket.Job.ID].Outputs.First();
+                return Node.Wrapper.JobNodes[socket.Job.ID].Outputs.First();
             }
             set {
                 Log.Warning("Can't modify connections of job graph.");
             }
         }
         
-        public JobGraphPlugIn(JobGraphNode node, int plugIndex, IInputSocket socket) : base(node, plugIndex) {
+        public GraphJobPlugIn(GraphNode node, int plugIndex, IInputSocket socket) : base(node, plugIndex) {
             this.socket = socket;
 
             displayInfo.Name = $"Input {plugIndex}";
@@ -77,7 +77,7 @@ namespace MANIFOLD.JobGraph.Editor {
         }
     }
 
-    public class JobGraphPlugOut : JobGraphPlug, IPlugOut {
+    public class GraphJobPlugOut : GraphJobPlug, IPlugOut {
         private DisplayInfo displayInfo;
         private Type dataType;
         
@@ -85,7 +85,7 @@ namespace MANIFOLD.JobGraph.Editor {
         public override DisplayInfo DisplayInfo => displayInfo;
         public override Type Type => dataType;
 
-        public JobGraphPlugOut(JobGraphNode node, int plugIndex) : base(node, plugIndex) {
+        public GraphJobPlugOut(GraphJobNode node, int plugIndex) : base(node, plugIndex) {
             var outputJob = (IOutputJob)node.Job;
             // infer from output data
             dataType = outputJob.OutputData?.GetType();
@@ -103,85 +103,41 @@ namespace MANIFOLD.JobGraph.Editor {
         }
     }
     
-    public class JobGraphNode : INode {
-        protected JobGraphWrapper wrapper;
-        protected NodeUI ui;
+    public class GraphJobNode : GraphNode {
         protected IJob job;
-        protected List<JobGraphPlugIn> inputs;
-        protected List<JobGraphPlugOut> outputs;
+        protected List<GraphJobPlugIn> inputs;
+        protected List<GraphJobPlugOut> outputs;
+        protected DisplayInfo displayInfo;
 
-        public JobGraphWrapper Wrapper => wrapper;
         public IJob Job => job;
-        public string Identifier => job.ID.ToString();
-        public virtual DisplayInfo DisplayInfo { get; }
         
-        public Vector2 Position { get; set; }
-        public bool AutoSize => false;
-        public Vector2 ExpandSize { get; set; }
-
-        public virtual IEnumerable<IPlugIn> Inputs => inputs;
-        public virtual IEnumerable<IPlugOut> Outputs => outputs;
-
-        public bool HasTitleBar => true;
-        public bool IsReachable => true;
-        public bool CanClone => false;
-        public bool CanRemove => false;
-
-        public Pixmap Thumbnail => null;
-
-        public virtual string ErrorMessage => null;
+        public override string Identifier => $"{job.ID}.Job";
+        public override DisplayInfo DisplayInfo => displayInfo;
         
-        public event Action Changed;
+        public override IEnumerable<IPlugIn> Inputs => inputs;
+        public override IEnumerable<IPlugOut> Outputs => outputs;
 
-        public JobGraphNode(JobGraphWrapper wrapper, IJob job) {
-            this.wrapper = wrapper;
+        public GraphJobNode(JobGraphWrapper wrapper, IJob job) : base(wrapper) {
             this.job = job;
             
-            inputs = new List<JobGraphPlugIn>();
-            outputs = new List<JobGraphPlugOut>();
+            inputs = new List<GraphJobPlugIn>();
+            outputs = new List<GraphJobPlugOut>();
 
             if (job is IInputJob inputJob) {
                 for (int i = 0; i < inputJob.Inputs.Count; i++) {
                     var socket = inputJob.Inputs[i];
-                    inputs.Add(new JobGraphPlugIn(this, i, socket));
+                    inputs.Add(new GraphJobPlugIn(this, i, socket));
                 }
             }
             if (job is IOutputJob outputJob) {
-                outputs.Add(new JobGraphPlugOut(this, 0));
+                outputs.Add(new GraphJobPlugOut(this, 0));
             }
             
-            DisplayInfo = DisplayInfo.For(job);
+            displayInfo = DisplayInfo.For(job);
         }
 
-        public void Update(int zIndex) {
-            ui.ZIndex = zIndex;
-            ui.MarkNodeChanged();
-        }
-        
-        public void OnPaint(Rect rect) {
-            
-        }
-        
-        public void OnDoubleClick(MouseEvent e) {
-            
-        }
-        
-        public virtual NodeUI CreateUI(GraphView view) {
-            if (job is IJobGraph subGraph) {
-                var contains = subGraph.Select(x => wrapper.AllNodes[x.ID].ui);
-                ui = new JobGraphGroupUI(view, this, contains);
-            } else {
-                ui = new NodeUI(view, this);
-            }
-            return ui;
-        }
-
-        public Color GetPrimaryColor(GraphView view) {
-            return Color.Gray;
-        }
-
-        public Menu CreateContextMenu(NodeUI node) {
-            return null;
+        public override NodeUI CreateUI(GraphView view) {
+            return ui = new NodeUI(view, this);
         }
     }
 }

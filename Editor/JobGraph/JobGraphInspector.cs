@@ -12,6 +12,8 @@ namespace MANIFOLD.JobGraph.Editor {
         public JobGraphInspector(JobGraphDebugger debugger) : base(debugger) {
             this.debugger = debugger;
 
+            MinimumWidth = 400;
+            
             Layout = Layout.Column();
             Layout.Margin = 4;
             Layout.Spacing = 4;

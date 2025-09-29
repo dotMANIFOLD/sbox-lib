@@ -26,7 +26,7 @@ namespace MANIFOLD.JobGraph.Editor {
             graphList = row.Add(new ComboBox(Canvas));
             row.Add(new IconButton("refresh") { OnClick = RefreshGraphList });
             row.AddSeparator();
-            row.Add(new Button("Organize"));
+            row.Add(new Button("Organize") { Clicked = () => wrapper?.Organize() });
             row.AddStretchCell();
 
             splitter = Canvas.Layout.Add(new Splitter(Canvas));
@@ -71,7 +71,8 @@ namespace MANIFOLD.JobGraph.Editor {
         private void OnGraphSelectionChanged() {
             var jobs = graphView.SelectedItems
                 .Cast<NodeUI>()
-                .Select(x => (JobGraphNode)x.Node)
+                .Select(x => x.Node)
+                .OfType<GraphJobNode>()
                 .Select(x => x.Job);
             inspector.ShowJobs(jobs);
         }
