@@ -2,7 +2,7 @@
 using System.Linq;
 
 namespace MANIFOLD.Jobs {
-    public class OrderedJobGroup : JobGroup {
+    public class OrderedJobGroup : JobGroup, IOrderedJobGraph {
         private SortedList<int, IJob> order = new SortedList<int, IJob>();
 
         public override void Run() {

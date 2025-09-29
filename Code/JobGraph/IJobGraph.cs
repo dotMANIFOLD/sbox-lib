@@ -20,4 +20,8 @@ namespace MANIFOLD.Jobs {
         public void RemoveJob(IJob job);
         public IJob GetJob(Guid id);
     }
+
+    public interface IOrderedJobGraph : IJobGraph {
+        
+    }
 }
