@@ -62,6 +62,8 @@ namespace MANIFOLD.Jobs {
         
         public static void GetAllJobs(this IJobGraph graph, List<IJob> jobs) {
             foreach (var job in graph) {
+                if (job == graph) continue; // skip self
+                
                 if (job is IJobGraph child) {
                     GetAllJobs(child, jobs);
                 } else {
@@ -171,6 +173,7 @@ namespace MANIFOLD.Jobs {
         private static void TraverseLeftInternal<TJob, TInput>(TInput job, HashSet<IJob> visited, TraverseCallback<TJob> callback) where TJob : IJob where TInput : IInputJob {
             foreach (var input in job.Inputs) {
                 if (input == null) continue;
+                if (ReferenceEquals(job, input.Job)) continue;
                 
                 visited.Add(input.Job);
                 if (input.Job is TJob jobCast) {
@@ -217,6 +220,8 @@ namespace MANIFOLD.Jobs {
                     singleBranch = true;
                 } else {
                     foreach (var input in job.Inputs) {
+                        if (input.Job == job) continue; // skip self
+                        
                         if (!branchCache.TryGetValue(input.Job, out JobBranch nextBranch)) {
                             nextBranch = new JobBranch();
                             nextBranch.jobs.Insert(0, input.Job);
