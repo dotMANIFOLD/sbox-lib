@@ -28,11 +28,13 @@ namespace MANIFOLD.AnimGraph.Jobs {
                     sourceParameter.OnChanged += OnStateChanged;
                 }
 
-                suppressChange = true;
-                SourceTag = null;
-                suppressChange = false;
-                
-                if (!suppressChange) OnStateChanged();
+                if (!suppressChange) {
+                    suppressChange = true;
+                    SourceTag = null;
+                    suppressChange = false;
+                    
+                    OnStateChanged();
+                }
             }
         }
 
@@ -47,11 +49,13 @@ namespace MANIFOLD.AnimGraph.Jobs {
                     sourceTag.OnStateChanged += TagCallback;
                 }
 
-                suppressChange = true;
-                SourceParameter = null;
-                suppressChange = false;
-                
-                if (!suppressChange) OnStateChanged();
+                if (!suppressChange) {
+                    suppressChange = true;
+                    SourceParameter = null;
+                    suppressChange = false;
+                    
+                    OnStateChanged();
+                }
             }
         }
         
