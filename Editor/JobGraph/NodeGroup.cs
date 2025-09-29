@@ -4,13 +4,14 @@ using System.Linq;
 using MANIFOLD.Jobs;
 
 namespace MANIFOLD.JobGraph.Editor {
-    public enum LayoutDirection { RightToLeft, UpToDown }
+    public enum LayoutDirection { LeftToRight, UpToDown }
     
     public abstract class NodeGroupBase {
         public const float GRAPH_INCREMENT = 12;
         
         public int depth;
         public NodeGroupBase parent;
+        public LayoutDirection layoutDirection;
         
         public abstract float Width { get; }
         public abstract float Height { get; }
@@ -23,11 +24,10 @@ namespace MANIFOLD.JobGraph.Editor {
         
         public IJobGraph jobGraph;
         public List<NodeGroupBase> children = new();
-        public LayoutDirection layoutDirection;
 
         public override float Width {
             get {
-                if (layoutDirection == LayoutDirection.RightToLeft) {
+                if (layoutDirection == LayoutDirection.LeftToRight) {
                     int spacingCount = Math.Max(0, children.Count - 1);
                     float sum = 0;
                     foreach (var child in children) {
@@ -68,23 +68,42 @@ namespace MANIFOLD.JobGraph.Editor {
             this.depth = depth;
             this.parent = parent;
 
-            layoutDirection = jobGraph is OrderedJobGroup ? LayoutDirection.RightToLeft : LayoutDirection.UpToDown;
+            layoutDirection = jobGraph is IOrderedJobGraph ? LayoutDirection.LeftToRight : LayoutDirection.UpToDown;
         }
     }
 
     public class NodeLeafGroup : NodeGroupBase {
         public const float NODE_WIDTH = GRAPH_INCREMENT * 13;
+        public const float NODE_HEIGHT = GRAPH_INCREMENT * 4;
         public const float SPACING = GRAPH_INCREMENT * 4;
         
         public List<IJob> jobs = new();
 
         public override float Width {
             get {
-                int spacingCount = Math.Max(0, jobs.Count - 1);
-                return (jobs.Count * NODE_WIDTH) + (spacingCount * SPACING);
+                if (layoutDirection == LayoutDirection.LeftToRight) {
+                    int spacingCount = Math.Max(0, jobs.Count - 1);
+                    return (jobs.Count * NODE_WIDTH) + (spacingCount * SPACING);
+                } else {
+                    return NODE_WIDTH;
+                }
             }
         }
 
-        public override float Height => GRAPH_INCREMENT * 4;
+        public override float Height {
+            get {
+                if (layoutDirection == LayoutDirection.UpToDown) {
+                    int spacingCount = Math.Max(0, jobs.Count - 1);
+                    return (jobs.Count * NODE_HEIGHT) + (spacingCount * SPACING);
+                } else {
+                    return NODE_HEIGHT;
+                }
+            }
+        }
+
+        public NodeLeafGroup(NodeGroupBase parent) {
+            this.parent = parent;
+            layoutDirection = parent?.layoutDirection ?? LayoutDirection.LeftToRight;
+        }
     }
 }

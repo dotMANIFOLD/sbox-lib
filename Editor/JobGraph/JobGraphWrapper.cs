@@ -96,7 +96,7 @@ namespace MANIFOLD.JobGraph.Editor {
 
             void AddToLeaf(IJob job) {
                 if (leaf == null) {
-                    leaf = new NodeLeafGroup();
+                    leaf = new NodeLeafGroup(group);
                     group.children.Add(leaf);
                 }
                 leaf.jobs.Add(job);
@@ -161,11 +161,12 @@ namespace MANIFOLD.JobGraph.Editor {
         }
         
         private void PositionGroups(NodeGroup group, Vector2 position) {
-            int movementAxis = group.layoutDirection == LayoutDirection.RightToLeft ? 0 : 1;
-            int centerAxis = group.layoutDirection == LayoutDirection.RightToLeft ? 1 : 0;
-            foreach (var child in group.children) {
+            int movementAxis = group.layoutDirection == LayoutDirection.LeftToRight ? 0 : 1;
+            int centerAxis = group.layoutDirection == LayoutDirection.LeftToRight ? 1 : 0;
+            
+            foreach (var child in group.children.AsEnumerable().Reverse()) {
                 Vector2 childPos = position;
-                childPos[centerAxis] -= (child.Size[centerAxis] - group.Size[centerAxis]) * 0.5f;
+                childPos[centerAxis] += (child.Size[centerAxis] - group.Size[centerAxis]) * 0.5f;
 
                 if (child is NodeGroup childGroup) {
                     PositionGroups(childGroup, childPos);
@@ -173,15 +174,19 @@ namespace MANIFOLD.JobGraph.Editor {
                     PositionNodes(leaf, childPos);
                 }
 
-                position[movementAxis] += child.Size[movementAxis] + NodeGroup.SPACING;
+                position[movementAxis] -= child.Size[movementAxis] + NodeGroup.SPACING;
             }
         }
 
         private void PositionNodes(NodeLeafGroup leaf, Vector2 position) {
-            foreach (var job in leaf.jobs) {
+            int movementAxis = leaf.layoutDirection == LayoutDirection.LeftToRight ? 0 : 1;
+            float movement = leaf.layoutDirection == LayoutDirection.LeftToRight ? NodeLeafGroup.NODE_WIDTH : NodeLeafGroup.NODE_HEIGHT;
+            
+            foreach (var job in leaf.jobs.AsEnumerable().Reverse()) {
                 var node = jobNodes[job.ID];
                 node.Position = position;
-                position.x += NodeLeafGroup.NODE_WIDTH + NodeLeafGroup.SPACING;
+                
+                position[movementAxis] -= movement + NodeLeafGroup.SPACING;
             }
         }
     }
