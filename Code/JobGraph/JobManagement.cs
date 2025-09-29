@@ -191,10 +191,10 @@ namespace MANIFOLD.Jobs {
         /// </summary>
         /// <param name="job">Job to start resolving from. Any jobs to the right are not considered.</param>
         /// <returns>Branches originating from the provided job</returns>
-        public static JobBranch ResolveBranches(this IInputJob job) {
+        public static JobBranch ResolveBranches(this IInputJob job, bool includeSelf = true) {
             Dictionary<IJob, JobBranch> branchCache = new Dictionary<IJob, JobBranch>();
             JobBranch initialBranch = new JobBranch();
-            initialBranch.jobs.Add(job);
+            if (includeSelf) initialBranch.jobs.Add(job);
             branchCache.Add(job, initialBranch);
             ResolveBranchesInternal(job, initialBranch, branchCache);
             return initialBranch;
@@ -204,10 +204,10 @@ namespace MANIFOLD.Jobs {
         /// Just like <see cref="ResolveBranches"/>, but it returns all branches instead of the root one.
         /// </summary>
         /// <inheritdoc cref="ResolveBranches"/>
-        public static IEnumerable<JobBranch> ResolveBranchesFlat(this IInputJob job) {
+        public static IEnumerable<JobBranch> ResolveBranchesFlat(this IInputJob job, bool includeSelf = true) {
             Dictionary<IJob, JobBranch> branchCache = new Dictionary<IJob, JobBranch>();
             JobBranch initialBranch = new JobBranch();
-            initialBranch.jobs.Add(job);
+            if (includeSelf) initialBranch.jobs.Add(job);
             branchCache.Add(job, initialBranch);
             ResolveBranchesInternal(job, initialBranch, branchCache);
             return branchCache.Values.Distinct();
