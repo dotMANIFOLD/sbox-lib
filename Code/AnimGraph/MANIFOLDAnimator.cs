@@ -165,10 +165,6 @@ namespace MANIFOLD.AnimGraph {
             }
             
             mainGroup = new OrderedJobGroup();
-
-            // CREATE APPLY TO MODEL JOB
-            applyJob = new ApplyToModelJob();
-            applyJob.SetGraph(mainGroup);
             
             // CREATE ANIM GRAPH
             JobCreationContext ctx = new JobCreationContext();
@@ -178,17 +174,13 @@ namespace MANIFOLD.AnimGraph {
             ctx.tags = tags;
 
             var animGraphJob = new AnimGraphJob(graph, ctx);
-            animGraphJob.OutputTo(applyJob, 0);
-            
-            // GROUPING
-            var branches = applyJob.ResolveBranchesFlat();
-            foreach (var level in branches.GroupBy(x => x.depth).OrderByDescending(x => x.Key)) {
-                var group = new JobGroup().SetGraph(mainGroup);
-                foreach (var branch in level) {
-                    branch.CreateGraph<OrderedJobGroup>().SetGraph(group);
-                }
-            }
+            animGraphJob.SetGraph(mainGroup);
 
+            // CREATE APPLY TO MODEL JOB
+            applyJob = new ApplyToModelJob();
+            applyJob.SetGraph(mainGroup);
+            applyJob.InputFrom(animGraphJob, 0);
+            
             Bind();
             applyJob.Reset();
             

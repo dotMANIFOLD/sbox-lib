@@ -1,13 +1,18 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Generic;
 using System.Linq;
 using MANIFOLD.Jobs;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Jobs {
-    public class AnimGraphJob : AnimJob {
+    public class AnimGraphJob : AnimJob, IOrderedJobGraph {
         private readonly AnimGraph graph;
+        private readonly OrderedJobGroup mainGroup;
+        private List<IJob> jobsEnumerable;
         
         public AnimGraph AnimGraph => graph;
+        public bool IsValid => mainGroup != null;
         
         public AnimGraphJob(AnimGraph graph, JobCreationContext ctx) : base(Guid.NewGuid()) {
             this.graph = graph;
@@ -41,13 +46,48 @@ namespace MANIFOLD.AnimGraph.Jobs {
                     index++;
                 }
             }
+
+            mainGroup = new OrderedJobGroup();
+            jobsEnumerable = new List<IJob>() { mainGroup, this };
             
-            // Do we group here? or should that only be handled by
-            // the one assembling the graph?
+            var branches = this.ResolveBranchesFlat(false);
+            foreach (var level in branches.GroupBy(x => x.depth).OrderByDescending(x => x.Key)) {
+                JobGroup group = null;
+                if (level.Count() > 1) group = new JobGroup().SetGraph(mainGroup);
+                foreach (var branch in level) {
+                    if (branch.jobs.Count > 1) {
+                        branch.CreateGraph<OrderedJobGroup>().SetGraph(group ?? mainGroup);
+                    } else {
+                        branch.jobs[0].SetGraph(group ?? mainGroup);
+                    }
+                }
+            }
         }
         
         public override void Run() {
+            mainGroup.Run();
+            
             OutputData = Inputs[0].Job.OutputData;
+        }
+
+        public void AddJob(IJob job) {
+            
+        }
+
+        public void RemoveJob(IJob job) {
+            
+        }
+
+        public IJob GetJob(Guid id) {
+            return null;
+        }
+
+        public IEnumerator<IJob> GetEnumerator() {
+            return jobsEnumerable.GetEnumerator();
+        }
+
+        IEnumerator IEnumerable.GetEnumerator() {
+            return GetEnumerator();
         }
     }
 }
