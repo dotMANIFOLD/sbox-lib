@@ -10,6 +10,20 @@ namespace MANIFOLD.Animation {
         
         [JsonIgnore]
         public abstract int FrameCount { get; }
+        [JsonIgnore]
+        public abstract bool Ready { get; }
+
+        public virtual void Compress() {
+            
+        }
+
+        public virtual void Decompress() {
+            
+        }
+
+        public virtual void Reset() {
+            
+        }
         
         public override string ToString() {
             string str = string.IsNullOrEmpty(Name) ? "No Name" : Name;
@@ -21,31 +35,8 @@ namespace MANIFOLD.Animation {
     }
     
     public abstract class Track<T> : Track {
-        public Dictionary<int, T> KeyFrames { get; set; } = new();
+        public abstract T Get(int frame);
 
-        [JsonIgnore]
-        public override int FrameCount => KeyFrames.Count == 0 ? 0 : KeyFrames.Keys.Max();
-
-        public T Get(int frame) {
-            if (frame < 0) {
-                throw new ArgumentOutOfRangeException(nameof(frame), "Frame must be 0 or greater");
-            }
-            
-            if (KeyFrames.TryGetValue(frame, out T keyFrame)) return keyFrame;
-            int lastFrame = KeyFrames.Keys.Last(x => frame > x);
-            return KeyFrames[lastFrame];
-        }
-
-        public T GetNext(int frame) {
-            if (frame < 0) {
-                throw new ArgumentOutOfRangeException(nameof(frame), "Frame must be 0 or greater");
-            }
-            
-            int nextFrame = KeyFrames.Keys.FirstOrDefault(x => frame < x, -1);
-            if (nextFrame == -1) {
-                return Get(frame);
-            }
-            return KeyFrames[nextFrame];
-        }
+        public abstract T GetNext(int frame);
     }
 }

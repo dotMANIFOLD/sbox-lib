@@ -133,6 +133,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
 
         private void CacheAnimation() {
             if (clip == null || trackCache == null) return;
+            clip.Decompress();
             
             var trackGroups = clip.Tracks.GroupBy(x => x.TargetBone);
             foreach (var tracks in trackGroups) {

@@ -34,6 +34,18 @@ namespace MANIFOLD.Animation {
             set => Tracks = value.DeserializePolymorphic<Track>();
         }
 
+        public void Compress() {
+            foreach (var track in Tracks) {
+                track.Compress();
+            }
+        }
+
+        public void Decompress() {
+            foreach (var track in Tracks) {
+                if (Game.IsEditor || !track.Ready) track.Decompress();
+            }
+        }
+        
         protected override Bitmap CreateAssetTypeIcon(int width, int height) {
             return CreateSimpleAssetTypeIcon("animation", width, height, ModuleData.BG_COLOR);
         }
