@@ -28,7 +28,7 @@ namespace MANIFOLD.Editor {
         }
         
         public const string GITHUB_LINK = "https://github.com/dotMANIFOLD/sbox-vtools";
-        public const string TARGET_VERSION = "0.1.0";
+        public const string TARGET_VERSION = "0.2.0";
         public const string DOWNLOAD_LINK = $"{GITHUB_LINK}/releases/download/{TARGET_VERSION}/vtools-win-x64.zip";
         
         public const string VTOOLS_FOLDER = "vtools/";
