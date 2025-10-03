@@ -26,23 +26,29 @@ namespace MANIFOLD.Animation {
         public float Duration => (1 / FrameRate) * FrameCount;
         
         [Hide, JsonIgnore]
-        public List<Track> Tracks { get; set; } = new List<Track>();
-        
+        public List<BoneTrack> BoneTracks { get; set; } = new List<BoneTrack>();
+
         [Hide]
-        public JsonArray SerializedTracks {
-            get => Tracks.SerializePolymorphic();
-            set => Tracks = value.DeserializePolymorphic<Track>();
+        public JsonArray SerializedBoneTracks {
+            get => BoneTracks.SerializePolymorphic();
+            set => BoneTracks = value.DeserializePolymorphic<BoneTrack>();
         }
 
-        public void Compress() {
-            foreach (var track in Tracks) {
-                track.Compress();
+        public void Load() {
+            foreach (var track in BoneTracks) {
+                if (Game.IsEditor || !track.Loaded) track.Load();
             }
         }
 
-        public void Decompress() {
-            foreach (var track in Tracks) {
-                if (Game.IsEditor || !track.Ready) track.Decompress();
+        public void Unload() {
+            foreach (var track in BoneTracks) {
+                track.Unload();
+            }
+        }
+        
+        public void CompressData() {
+            foreach (var track in BoneTracks) {
+                track.CompressData();
             }
         }
         

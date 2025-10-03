@@ -8,8 +8,8 @@ using Sandbox;
 namespace MANIFOLD.AnimGraph.Jobs {
     public class SampleJob : IOutputAnimJob {
         private class TrackGroup {
-            public Track<Vector3> position;
-            public Track<Rotation> rotation;
+            public BoneTrack<Vector3> position;
+            public BoneTrack<Rotation> rotation;
         }
 
         private AnimationClip clip;
@@ -133,17 +133,17 @@ namespace MANIFOLD.AnimGraph.Jobs {
 
         private void CacheAnimation() {
             if (clip == null || trackCache == null) return;
-            clip.Decompress();
+            clip.Load();
             
-            var trackGroups = clip.Tracks.GroupBy(x => x.TargetBone);
+            var trackGroups = clip.BoneTracks.GroupBy(x => x.TargetBone);
             foreach (var tracks in trackGroups) {
                 if (!BindData.remapTable.TryGetValue(tracks.Key, out int index)) continue;
 
                 TrackGroup group = new TrackGroup();
                 trackCache[index] = group;
                 
-                group.position = (Track<Vector3>)tracks.FirstOrDefault(x => x.Name == "LocalPosition");
-                group.rotation = (Track<Rotation>)tracks.FirstOrDefault(x => x.Name == "LocalRotation");
+                group.position = (BoneTrack<Vector3>)tracks.FirstOrDefault(x => x.Name == "LocalPosition");
+                group.rotation = (BoneTrack<Rotation>)tracks.FirstOrDefault(x => x.Name == "LocalRotation");
             }
         }
         
