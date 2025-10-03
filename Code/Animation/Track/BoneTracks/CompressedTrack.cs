@@ -4,9 +4,11 @@ using Sandbox;
 
 namespace MANIFOLD.Animation {
     public abstract class CompressedTrack<T> : BoneTrack<T> {
-        [JsonIgnore]
+        [ReadOnly, JsonIgnore]
         public T[] Data { get; set; }
+        [ReadOnly]
         public int ElementCount { get; set; }
+        [ReadOnly]
         public string ContentString { get; set; }
         
         [JsonIgnore]

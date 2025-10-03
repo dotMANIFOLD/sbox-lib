@@ -2,14 +2,15 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Text.Json.Serialization;
+using Sandbox;
 
 namespace MANIFOLD.Animation {
     public class RawTrack<T> : BoneTrack<T> {
         public SortedDictionary<int, T> KeyFrames { get; set; } = new();
 
-        [JsonIgnore]
+        [ReadOnly, JsonIgnore]
         public override int FrameCount => KeyFrames.Count;
-        [JsonIgnore]
+        [Hide, JsonIgnore]
         public override bool Loaded => true;
         
         public override T Get(int frame) {

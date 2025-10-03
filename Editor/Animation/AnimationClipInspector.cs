@@ -9,18 +9,17 @@ namespace MANIFOLD.Animation.Editor {
     [Inspector(typeof(AnimationClip))]
     public class AnimationClipInspector : InspectorWidget {
         public class TrackInfo : Widget {
-            public TrackInfo(BoneTrack track, Widget parent = null) : base(parent) {
+            public TrackInfo(ITrack track, Widget parent = null) : base(parent) {
                 var grid = Layout.Grid();
                 grid.Margin = 4;
                 grid.VerticalSpacing = 8;
 
                 Layout = grid;
-
-                var trackType = track.GetType().BaseType.GenericTypeArguments[0];
                 
-                grid.AddCell(0, 0, new Label($"{track.Name} {(string.IsNullOrEmpty(track.TargetBone) ? "" : $"({track.TargetBone})")}"));
-                grid.AddCell(1, 0, new Label(trackType.Name));
-                grid.AddCell(0, 1, new Label($"Frame count: {track.FrameCount}"));
+                grid.AddCell(0, 0, new Label(track.Name));
+                grid.AddCell(1, 0, new Label(track.GetType().Name));
+                grid.AddCell(0, 1, new Label($"Data Type: {track.DataType.Name}"));
+                grid.AddCell(0, 2, new Label($"Frame count: {track.FrameCount}"));
             }
 
             protected override void OnPaint() {
@@ -35,7 +34,8 @@ namespace MANIFOLD.Animation.Editor {
         private AnimationClip target;
 
         private ControlSheet sheet;
-        private Layout tracksLayout;
+        private Layout boneTracksLayout;
+        private Layout eventTracksLayout;
         
         public AnimationClipInspector(SerializedObject so) : base(so) {
             Layout = Layout.Column();
@@ -50,9 +50,14 @@ namespace MANIFOLD.Animation.Editor {
             sheet.AddObject(so, SheetFilter);
 
             Layout.Add(new Label.Header("Bone Tracks"));
-            tracksLayout = Layout.AddColumn();
-            tracksLayout.Margin = new Margin(8, 0);
-            tracksLayout.Spacing = 4;
+            boneTracksLayout = Layout.AddColumn();
+            boneTracksLayout.Margin = new Margin(8, 0);
+            boneTracksLayout.Spacing = 4;
+            
+            Layout.Add(new Label.Header("Event Tracks"));
+            eventTracksLayout = Layout.AddColumn();
+            eventTracksLayout.Margin = new Margin(8, 0);
+            eventTracksLayout.Spacing = 4;
             
             Layout.AddStretchCell();
             
@@ -60,10 +65,14 @@ namespace MANIFOLD.Animation.Editor {
         }
 
         private void RebuildTracks() {
-            tracksLayout.Clear(true);
-
+            boneTracksLayout.Clear(true);
             foreach (var track in target.BoneTracks) {
-                tracksLayout.Add(new TrackInfo(track, this));
+                boneTracksLayout.Add(new TrackInfo(track, this));
+            }
+            
+            eventTracksLayout.Clear(true);
+            foreach (var track in target.EventTracks) {
+                eventTracksLayout.Add(new TrackInfo(track, this));
             }
         }
         

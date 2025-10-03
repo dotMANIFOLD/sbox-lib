@@ -1,7 +1,10 @@
-﻿namespace MANIFOLD.Animation {
+﻿using System;
+
+namespace MANIFOLD.Animation {
     public interface ITrack {
-        public string Name { get; set; }
+        public string Name { get; }
         public int FrameCount { get; }
+        public Type DataType { get; }
     }
 
     public interface ITrack<T> : ITrack {
