@@ -1,5 +1,5 @@
 ﻿namespace MANIFOLD.Animation {
-    public record struct GenericEvent {
+    public record GenericEvent : IEvent {
         public string Type { get; set; }
         public int Int { get; set; }
         public float Float { get; set; }

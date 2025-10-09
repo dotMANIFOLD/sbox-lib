@@ -2,7 +2,7 @@
 using Sandbox;
 
 namespace MANIFOLD.Animation {
-    public record struct FootstepEvent {
+    public record FootstepEvent : IEvent {
         public enum FootSide : int { Left, Right }
         
         public FootSide Foot { get; set; }
