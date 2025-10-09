@@ -1,8 +1,11 @@
-﻿using System.Linq;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
 using MANIFOLD.Animation;
 using MANIFOLD.Jobs;
 using Sandbox;
 using Sandbox.Diagnostics;
+using SoundEvent = MANIFOLD.Animation.SoundEvent;
 
 namespace MANIFOLD.AnimGraph {
     using Jobs;
@@ -75,7 +78,17 @@ namespace MANIFOLD.AnimGraph {
         /// </summary>
         public TagList TagList => tags;
         
+        public Action<GenericEvent> OnGenericEvent { get; set; }
+        public Action<FootstepEvent> OnFootstepEvent { get; set; }
+        public Action<SoundEvent> OnSoundEvent { get; set; }
+        public Action<BodyGroupEvent> OnBodyGroupEvent { get; set; }
+        
         public bool IsPlaying => isPlaying;
+
+        protected override void OnAwake() {
+            OnSoundEvent = OnSoundEventDefault;
+            OnBodyGroupEvent = OnBodyGroupEventDefault;
+        }
 
         protected override void OnEnabled() {
             if (Scene.IsEditor) return;
@@ -151,6 +164,19 @@ namespace MANIFOLD.AnimGraph {
                 applyJob.TraverseLeft<IBaseAnimJob, IInputAnimJob>(PrepareTraverse);
                 mainGroup.Run();
                 parameters.Reset(true);
+
+                var results = applyJob.LastResult;
+                foreach (var evt in results.TriggeredEvents) {
+                    if (evt is GenericEvent genericEvent) {
+                        OnGenericEvent?.Invoke(genericEvent);
+                    } else if (evt is FootstepEvent footstepEvent) {
+                        OnFootstepEvent?.Invoke(footstepEvent);
+                    } else if (evt is SoundEvent soundEvent) {
+                        OnSoundEvent?.Invoke(soundEvent);
+                    } else if (evt is BodyGroupEvent bodyGroupEvent) {
+                        OnBodyGroupEvent?.Invoke(bodyGroupEvent);
+                    }
+                }
             }
         }
         
@@ -207,6 +233,21 @@ namespace MANIFOLD.AnimGraph {
         
         private void PrepareTraverse(IBaseAnimJob job) {
             job.Prepare();
+        }
+
+        private void OnSoundEventDefault(SoundEvent evt) {
+            Vector3 position = WorldPosition;
+            if (evt.Attachment != null) {
+                var result = Renderer.GetAttachment(evt.Attachment);
+                if (result.HasValue) {
+                    position = result.Value.Position;
+                }
+            }
+            Sound.Play(evt.Event);
+        }
+
+        private void OnBodyGroupEventDefault(BodyGroupEvent evt) {
+            Renderer.SetBodyGroup(evt.BodyGroup, evt.Value);
         }
     }
 }
