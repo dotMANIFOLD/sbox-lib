@@ -27,11 +27,19 @@ namespace MANIFOLD.Animation {
         
         [Hide, JsonIgnore]
         public List<BoneTrack> BoneTracks { get; set; } = new List<BoneTrack>();
-
+        [Hide, JsonIgnore]
+        public List<EventTrack> EventTracks { get; set; } = new List<EventTrack>();
+        
         [Hide]
         public JsonArray SerializedBoneTracks {
             get => BoneTracks.SerializePolymorphic();
             set => BoneTracks = value.DeserializePolymorphic<BoneTrack>();
+        }
+
+        [Hide]
+        public JsonArray SerializedEventTracks {
+            get => EventTracks.SerializePolymorphic();
+            set => EventTracks = value.DeserializePolymorphic<EventTrack>();
         }
 
         public void Load() {
