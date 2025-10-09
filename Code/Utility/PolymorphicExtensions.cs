@@ -7,16 +7,33 @@ using Sandbox;
 namespace MANIFOLD.Utility {
     public static class PolymorphicExtensions {
         public const string TYPE_FIELD = "__type";
+        public const string TYPE_ELEMENT_FIELD = "__elements";
         public const string NULL_KEY = "__null";
 
         public static JsonNode ToPolymorphic<T>(this T obj) {
             JsonNode node = Json.ToNode(obj);
-            node[TYPE_FIELD] = Json.ToNode(obj.GetType(), typeof(Type));
+            var type = obj.GetType();
+            var typeDef = TypeLibrary.GetType(type);
+            if (typeDef.IsGenericType) {
+                Log.Warning("Cannot properly serialize generics due to whitelist issues");
+                node[TYPE_FIELD] = Json.ToNode(type, typeof(Type));
+                // node[TYPE_FIELD] = Json.ToNode(type.GetGenericTypeDefinition(), typeof(Type));
+                node[TYPE_ELEMENT_FIELD] = Json.ToNode(typeDef.GenericArguments);
+            } else {
+                node[TYPE_FIELD] = Json.ToNode(type, typeof(Type));
+            }
+            
             return node;
         }
 
         public static T FromPolymorphic<T>(this JsonNode node) {
             var type = Json.FromNode<Type>(node[TYPE_FIELD]);
+            var typeDef = TypeLibrary.GetType(type);
+            if (typeDef.IsGenericType) {
+                var elements = Json.FromNode<Type[]>(node[TYPE_ELEMENT_FIELD]);
+                type = typeDef.MakeGenericType(elements);
+            }
+            
             return (T)Json.FromNode(node, type);
         }
         
