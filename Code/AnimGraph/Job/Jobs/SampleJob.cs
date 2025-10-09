@@ -19,7 +19,11 @@ namespace MANIFOLD.AnimGraph.Jobs {
         internal float graphPlaybackSpeed = 1;
         
         private SkeletonData<TrackGroup> trackCache;
+        private IReadOnlyList<EventTrack> eventTracks;
+        private int? lastEvaluatedFrame;
+        
         private Pose workingPose;
+        private List<IEvent> triggeredEvents;
         private List<Output<JobResults>> outputs = new List<Output<JobResults>>();
 
         public Guid ID { get; }
@@ -76,6 +80,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         public void Bind() {
             trackCache = new SkeletonData<TrackGroup>(BindData.remapTable);
             workingPose = BindData.bindPose.Clone();
+            triggeredEvents = new List<IEvent>(3);
 
             CacheAnimation();
         }
@@ -93,8 +98,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             float interval = (1 / clip.FrameRate);
             float frame = Time / (1 / clip.FrameRate);
-            int lastFrame = frame.FloorToInt();
-            float lerpFactor = frame - lastFrame;
+            int frameAsInt = frame.FloorToInt();
+            float lerpFactor = frame - frameAsInt;
 
             for (int i = 0; i < workingPose.BoneCount; i++) {
                 BoneTransform transform = workingPose[i];
@@ -102,22 +107,33 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 var group = trackCache[i];
                 
                 if (group.position != null) {
-                    local.Position = group.position.Get(lastFrame);
+                    local.Position = group.position.Get(frameAsInt);
                     if (Interpolate) {
-                        var next = group.position.GetNext(lastFrame);
+                        var next = group.position.GetNext(frameAsInt);
                         local.Position = local.Position.LerpTo(next, lerpFactor);
                     }
                 }
                 if (group.rotation != null) {
-                    local.Rotation = group.rotation.Get(lastFrame);
+                    local.Rotation = group.rotation.Get(frameAsInt);
                     if (Interpolate) {
-                        var next = group.rotation.GetNext(lastFrame);
+                        var next = group.rotation.GetNext(frameAsInt);
                         local.Rotation = local.Rotation.SlerpTo(next, lerpFactor);
                     }
                 }
 
                 transform.LocalTransform = local;
             }
+
+            triggeredEvents.Clear();
+            if (lastEvaluatedFrame != frameAsInt) {
+                foreach (var track in eventTracks) {
+                    var result = track.GetInternal(frameAsInt);
+                    if (result == null) continue;
+                    triggeredEvents.Add(result);
+                }
+            }
+
+            lastEvaluatedFrame = frameAsInt;
             Time += Context.deltaTime * RealPlaybackSpeed;
             
             if (Looping) {
@@ -128,7 +144,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 }
             }
 
-            OutputData = new JobResults(workingPose, Time / clip.FrameRate, !Looping && Time >= clip.Duration);
+            OutputData = new JobResults(workingPose, Time / clip.FrameRate, !Looping && Time >= clip.Duration, triggeredEvents);
         }
 
         private void CacheAnimation() {
@@ -145,6 +161,9 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 group.position = (BoneTrack<Vector3>)tracks.FirstOrDefault(x => x.Name == "LocalPosition");
                 group.rotation = (BoneTrack<Rotation>)tracks.FirstOrDefault(x => x.Name == "LocalRotation");
             }
+
+            eventTracks = clip.EventTracks;
+            lastEvaluatedFrame = null;
         }
         
         // OUTPUT API

@@ -1,11 +1,19 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using MANIFOLD.Animation;
 using MANIFOLD.Jobs;
 
 namespace MANIFOLD.AnimGraph {
-    public record struct JobResults(Pose Pose, float CyclePosition = 0, bool Finished = false) {
-        
+    public record JobResults(Pose Pose, float CyclePosition = 0, bool Finished = false, List<IEvent> TriggeredEvents = null) {
+        protected JobResults(JobResults original) {
+            Pose = original.Pose;
+            CyclePosition = original.CyclePosition;
+            Finished = original.Finished;
+            if (original.TriggeredEvents != null) {
+                TriggeredEvents = new List<IEvent>(original.TriggeredEvents);
+            }
+        }
     }
     
     public interface IBaseAnimJob : IJob {
