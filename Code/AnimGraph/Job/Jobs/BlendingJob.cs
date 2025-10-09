@@ -55,11 +55,18 @@ namespace MANIFOLD.AnimGraph.Jobs {
             workingPose.CopyFromUnsafe(BindData.bindPose);
             blendPasses = 0;
 
+            JobResults baseResults = null;
+            float highestWeight = -1;
             float cycleResult = 0;
+            
             for (int i = 0; i < inputs.Length; i++) {
                 var job = inputs[i].Job;
                 float weight = weights[i];
                 if (weight.AlmostEqual(0) || weight < 0) continue;
+                if (weight > highestWeight) {
+                    highestWeight = weight;
+                    baseResults = job.OutputData;
+                }
                 
                 Pose inputPose = job?.OutputData.Pose ?? BindData.bindPose;
                 float cyclePos = job?.OutputData.CyclePosition ?? 0;
@@ -70,7 +77,9 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 cycleResult = cycleResult.LerpTo(cyclePos, weight);
             }
 
-            OutputData = new JobResults(workingPose, cycleResult);
+            OutputData = baseResults != null ?
+                baseResults with { Pose = workingPose, CyclePosition = cycleResult, Finished = false } :
+                new JobResults(workingPose, cycleResult);
         }
 
         public virtual void SetLayerCount(int count) {
