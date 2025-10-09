@@ -243,7 +243,7 @@ namespace MANIFOLD.AnimGraph {
                     position = result.Value.Position;
                 }
             }
-            Sound.Play(evt.Event);
+            Sound.Play(evt.Event, position);
         }
 
         private void OnBodyGroupEventDefault(BodyGroupEvent evt) {
