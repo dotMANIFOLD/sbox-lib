@@ -109,17 +109,4 @@ namespace MANIFOLD.AnimGraph.Parameters {
             };
         }
     }
-
-    [ExposeToAnimGraph(Color = ModuleData.BG_COLOR)]
-    public class AnimGraphParameter : Parameter<AnimGraph> {
-        public override Parameter Clone() {
-            return new AnimGraphParameter() {
-                ID = ID,
-                Name = Name,
-                AutoReset = AutoReset,
-                backingField = backingField,
-                DefaultValue = DefaultValue
-            };
-        }
-    }
 }
