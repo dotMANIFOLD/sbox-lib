@@ -22,11 +22,15 @@ namespace MANIFOLD.JobGraph.Editor {
         protected override void Layout() {
             if (node == null) return;
             if (node.Containing == null) return;
+            if (!node.Containing.Any()) return;
             
             Rect rect = node.Containing.First().SceneRect;
-            foreach (var elem in node.Containing.Skip(1)) {
-                rect.Add(elem.SceneRect);
+            if (node.Containing.Count() > 1) {
+                foreach (var elem in node.Containing.Skip(1)) {
+                    rect.Add(elem.SceneRect);
+                }
             }
+                
             rect = rect.Grow(MARGIN);
             SceneRect = rect;
         }
