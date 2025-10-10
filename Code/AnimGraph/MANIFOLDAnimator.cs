@@ -166,15 +166,17 @@ namespace MANIFOLD.AnimGraph {
                 parameters.Reset(true);
 
                 var results = applyJob.LastResult;
-                foreach (var evt in results.TriggeredEvents) {
-                    if (evt is GenericEvent genericEvent) {
-                        OnGenericEvent?.Invoke(genericEvent);
-                    } else if (evt is FootstepEvent footstepEvent) {
-                        OnFootstepEvent?.Invoke(footstepEvent);
-                    } else if (evt is SoundEvent soundEvent) {
-                        OnSoundEvent?.Invoke(soundEvent);
-                    } else if (evt is BodyGroupEvent bodyGroupEvent) {
-                        OnBodyGroupEvent?.Invoke(bodyGroupEvent);
+                if (results.TriggeredEvents != null) {
+                    foreach (var evt in results.TriggeredEvents) {
+                        if (evt is GenericEvent genericEvent) {
+                            OnGenericEvent?.Invoke(genericEvent);
+                        } else if (evt is FootstepEvent footstepEvent) {
+                            OnFootstepEvent?.Invoke(footstepEvent);
+                        } else if (evt is SoundEvent soundEvent) {
+                            OnSoundEvent?.Invoke(soundEvent);
+                        } else if (evt is BodyGroupEvent bodyGroupEvent) {
+                            OnBodyGroupEvent?.Invoke(bodyGroupEvent);
+                        }
                     }
                 }
             }
