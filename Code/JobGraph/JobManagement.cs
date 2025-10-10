@@ -216,27 +216,38 @@ namespace MANIFOLD.Jobs {
         private static void ResolveBranchesInternal(IInputJob job, JobBranch currentBranch, Dictionary<IJob, JobBranch> branchCache) {
             bool singleBranch = false;
             if (job.Inputs.Count > 1) {
-                if (job.Inputs.All(x => x.Job == job.Inputs[0].Job)) {
+                if (job.Inputs.All(x => x != null && x.Job == job.Inputs[0].Job)) {
                     singleBranch = true;
                 } else {
                     foreach (var input in job.Inputs) {
                         if (input.Job == job) continue; // skip self
+
+                        bool inBranch = branchCache.TryGetValue(input.Job, out JobBranch nextBranch);
                         
-                        if (!branchCache.TryGetValue(input.Job, out JobBranch nextBranch)) {
+                        void CreateNewBranch(IJob job) {
                             nextBranch = new JobBranch();
-                            nextBranch.jobs.Insert(0, input.Job);
-                            branchCache.Add(input.Job, nextBranch);
-                            
-                            if (input.Job is IInputJob casted) {
+                            nextBranch.depth = currentBranch.depth + 1;
+                            nextBranch.jobs.Insert(0, job);
+                            branchCache[job] = nextBranch;
+
+                            if (job is IInputJob casted) {
                                 ResolveBranchesInternal(casted, nextBranch, branchCache);
                             }
+                        }
+                        
+                        if (inBranch) {
+                            if (currentBranch.depth >= nextBranch.depth) {
+                                nextBranch.jobs.Remove(input.Job);
+                                CreateNewBranch(input.Job);
+                            }
+                        } else {
+                            CreateNewBranch(input.Job);
                         }
                         
                         if (!currentBranch.executes.Contains(nextBranch)) {
                             currentBranch.executes.Add(nextBranch);
                             nextBranch.entryPoints.Add(currentBranch);
                         }
-                        nextBranch.depth = Math.Max(nextBranch.depth, currentBranch.depth + 1);
                     }
                 }
             } else if (job.Inputs.Count == 1) {
