@@ -18,7 +18,6 @@ namespace MANIFOLD.AnimGraph.Jobs {
         public BlendingJob(Guid id, int layerCount) : base(id) {
             inputs = new Input<JobResults>[layerCount];
             weights = new float[layerCount];
-            weights[0] = 1;
         }
         
         public override void Bind() {
