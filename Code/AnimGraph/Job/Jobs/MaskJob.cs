@@ -60,8 +60,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
 
         public override void Run() {
-            var basePose = Inputs[0].Job?.OutputData.Pose ?? BindData.bindPose;
-            var maskedPose = Inputs[1].Job?.OutputData.Pose ?? BindData.bindPose;
+            var basePose = Inputs[0].Job?.OutputData?.Pose ?? BindData.bindPose;
+            var maskedPose = Inputs[1].Job?.OutputData?.Pose ?? BindData.bindPose;
             
             workingPose.CopyFrom(basePose);
             if (Weights != null && !Blend.AlmostEqual(0)) {

@@ -66,7 +66,8 @@ namespace MANIFOLD.Jobs {
                 
                 if (job is IJobGraph child) {
                     GetAllJobs(child, jobs);
-                } else {
+                }
+                if (job is not JobGroup) {
                     jobs.Add(job);
                 }
             }

@@ -46,6 +46,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             }
             
             foreach (var sampler in samplers) {
+                if (sampler.job == null) continue;
                 sampler.job.graphPlaybackSpeed = sampler.job.Duration / duration;
             }
         }
