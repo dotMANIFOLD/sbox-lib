@@ -24,6 +24,7 @@ namespace MANIFOLD.AnimGraph {
         private TagList tags;
         
         private OrderedJobGroup mainGroup;
+        private AnimGraphJob graphJob;
         private ApplyToModelJob applyJob;
         
         /// <summary>
@@ -201,13 +202,13 @@ namespace MANIFOLD.AnimGraph {
             ctx.parameters = parameters;
             ctx.tags = tags;
 
-            var animGraphJob = new AnimGraphJob(graph, ctx);
-            animGraphJob.SetGraph(mainGroup);
+            graphJob = new AnimGraphJob(graph, ctx);
+            graphJob.SetGraph(mainGroup);
 
             // CREATE APPLY TO MODEL JOB
             applyJob = new ApplyToModelJob();
             applyJob.SetGraph(mainGroup);
-            applyJob.InputFrom(animGraphJob, 0);
+            applyJob.InputFrom(graphJob, 0);
             
             Bind();
             applyJob.Reset();
@@ -231,6 +232,10 @@ namespace MANIFOLD.AnimGraph {
             if (graph == null) return;
             tags = new TagList();
             tags.AddGraph(graph);
+        }
+
+        public IBaseAnimJob GetAccessibleJob(string str) {
+            return graphJob.GetAccessibleJob(str);
         }
         
         private void PrepareTraverse(IBaseAnimJob job) {

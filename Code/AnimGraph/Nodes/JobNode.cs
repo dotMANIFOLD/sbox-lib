@@ -35,6 +35,17 @@ namespace MANIFOLD.AnimGraph {
         [Hide, ReadOnly]
         public bool Reachable { get; set; }
         
+        /// <summary>
+        /// Make this node easily accessible via string?
+        /// </summary>
+        [Space, Order(1000)]
+        public bool Accessible { get; set; }
+        /// <summary>
+        /// String to access this node with.
+        /// </summary>
+        [ShowIf(nameof(Accessible), true), Order(1001)]
+        public string AccessString { get; set; }
+        
         [Hide, JsonIgnore]
         public abstract Color AccentColor { get; }
         

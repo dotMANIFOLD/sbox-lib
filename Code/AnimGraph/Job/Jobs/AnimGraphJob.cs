@@ -10,6 +10,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         private readonly AnimGraph graph;
         private readonly OrderedJobGroup mainGroup;
         private List<IJob> jobsEnumerable;
+        private Dictionary<string, IBaseAnimJob> accessDictionary;
         
         public AnimGraph AnimGraph => graph;
         public bool IsValid => mainGroup != null;
@@ -27,6 +28,13 @@ namespace MANIFOLD.AnimGraph.Jobs {
 
             var finalPose = graph.FinalPoseNode;
             this.InputFrom((IOutputAnimJob)jobs[finalPose.Pose.ID.Value], 0);
+
+            accessDictionary = new Dictionary<string, IBaseAnimJob>();
+            foreach (var node in graph.Nodes.Values) {
+                if (node.Reachable && node.Accessible) {
+                    accessDictionary.Add(node.AccessString, jobs[node.ID]);
+                }
+            }
             
             foreach (var job in jobs.Values) {
                 var animNode = graph.Nodes[job.ID];
@@ -82,6 +90,13 @@ namespace MANIFOLD.AnimGraph.Jobs {
             return null;
         }
 
+        public IBaseAnimJob GetAccessibleJob(string str) {
+            if (accessDictionary.TryGetValue(str, out IBaseAnimJob job)) {
+                return job;
+            }
+            return null;
+        }
+        
         public IEnumerator<IJob> GetEnumerator() {
             return jobsEnumerable.GetEnumerator();
         }
