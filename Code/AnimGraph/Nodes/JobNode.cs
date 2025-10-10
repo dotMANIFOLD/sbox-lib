@@ -19,6 +19,8 @@ namespace MANIFOLD.AnimGraph {
 
         public const string MODIFIER = "Modifier";
         public const string MODIFIER_COLOR = "#ee8013";
+
+        public const string HOOK_COLOR = "#4d6942";
     }
 
     public class JobCreationContext {
