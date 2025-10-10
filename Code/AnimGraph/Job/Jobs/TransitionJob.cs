@@ -18,10 +18,16 @@ namespace MANIFOLD.AnimGraph.Jobs {
 
         public TransitionJob(int layerCount) : base(layerCount) {
             SyncPlayback = false;
+            if (layerCount > 0) {
+                weights[0] = 1;
+            }
         }
 
         public TransitionJob(Guid id, int layerCount) : base(id, layerCount) {
             SyncPlayback = false;
+            if (layerCount > 0) {
+                weights[0] = 1;
+            }
         }
 
         public override void Run() {
