@@ -17,6 +17,8 @@ namespace MANIFOLD.AnimGraph.Nodes {
         public NodeRef Override { get; set; } = new();
         
         public BoneMaskRef Mask { get; set; } = new();
+        public MaskJob.TransformSpace BoneSpace { get; set; } = MaskJob.TransformSpace.Local;
+        public MaskJob.TransformMask ComponentMask { get; set; } = MaskJob.TransformMask.All;
         
         /// <summary>
         /// If valid, the mask's weight is multiplied by this parameter.
@@ -58,6 +60,8 @@ namespace MANIFOLD.AnimGraph.Nodes {
             }
             
             // OTHER
+            job.Space = BoneSpace;
+            job.Mask = ComponentMask;
             job.ResetChild1 = ResetBaseChild;
             job.ResetChild2 = ResetOverrideChild;
             
