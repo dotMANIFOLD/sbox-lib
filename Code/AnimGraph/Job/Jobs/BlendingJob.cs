@@ -34,20 +34,26 @@ namespace MANIFOLD.AnimGraph.Jobs {
                     return (job: cast, weight: weights[x.Index]);
                 }).ToArray();
 
-            float duration = -1;
+            float duration = 0;
+            int samplersAccounted = 0;
             for (int i = 0; i < samplers.Length; i++) {
                 var sampler = samplers[i];
                 if (samplers[i].job == null) continue;
-                if (duration == -1) {
-                    duration = sampler.job.Duration * sampler.weight;
+                if (weights[i] <= 0) continue;
+                
+                if (samplersAccounted == 0) {
+                    duration = sampler.job.Duration;
                 } else {
                     duration = duration.LerpTo(sampler.job.Duration, sampler.weight);
                 }
+                samplersAccounted++;
             }
-            
-            foreach (var sampler in samplers) {
-                if (sampler.job == null) continue;
-                sampler.job.graphPlaybackSpeed = sampler.job.Duration / duration;
+
+            if (samplersAccounted > 0) {
+                foreach (var sampler in samplers) {
+                    if (sampler.job == null) continue;
+                    sampler.job.graphPlaybackSpeed = sampler.job.Duration / duration;
+                }
             }
         }
 

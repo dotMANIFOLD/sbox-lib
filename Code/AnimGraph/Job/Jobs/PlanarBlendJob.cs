@@ -53,6 +53,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 if (xParameter != null) {
                     xParameter.OnChanged += OnParameterChanged;
                 }
+                RecalculateWeights();
             }
         }
 
@@ -66,6 +67,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 if (yParameter != null) {
                     yParameter.OnChanged += OnParameterChanged;   
                 }
+                RecalculateWeights();
             }
         }
 
