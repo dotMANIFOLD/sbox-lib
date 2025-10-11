@@ -15,9 +15,7 @@ namespace MANIFOLD.Utility {
             var type = obj.GetType();
             var typeDef = TypeLibrary.GetType(type);
             if (typeDef.IsGenericType) {
-                Log.Warning("Cannot properly serialize generics due to whitelist issues");
-                node[TYPE_FIELD] = Json.ToNode(type, typeof(Type));
-                // node[TYPE_FIELD] = Json.ToNode(type.GetGenericTypeDefinition(), typeof(Type));
+                node[TYPE_FIELD] = Json.ToNode(typeDef.TargetType, typeof(Type));
                 node[TYPE_ELEMENT_FIELD] = Json.ToNode(typeDef.GenericArguments);
             } else {
                 node[TYPE_FIELD] = Json.ToNode(type, typeof(Type));
