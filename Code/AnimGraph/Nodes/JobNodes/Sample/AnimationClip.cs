@@ -6,6 +6,9 @@ using MANIFOLD.Inspector;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Nodes {
+    /// <summary>
+    /// Sample an animation.
+    /// </summary>
     [Category(JobCategories.SAMPLING)]
     [ExposeToAnimGraph]
     public class AnimationClip : JobNode {
