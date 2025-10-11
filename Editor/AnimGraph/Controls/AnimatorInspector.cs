@@ -7,7 +7,6 @@ namespace MANIFOLD.AnimGraph.Editor {
     public class AnimatorInspector : ComponentEditorWidget {
         private ControlSheet normalSheet;
         
-        private Group parameterGroup;
         private Widget parameterGroupCanvas;
         private ControlSheet parameterSheet;
 
@@ -39,8 +38,6 @@ namespace MANIFOLD.AnimGraph.Editor {
         [EditorEvent.Frame]
         private void OnFrame() {
             if (Target == null) return;
-
-            // parameterGroup.Visible = Target.IsPlaying;
             
             if (lastList != Target.Parameters) {
                 RebuildParameters();
