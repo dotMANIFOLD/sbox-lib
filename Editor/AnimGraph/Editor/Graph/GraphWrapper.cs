@@ -1,6 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using System.Text.Json.Nodes;
 using Editor.NodeEditor;
+using MANIFOLD.Utility;
+using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class GraphWrapper : IGraph {
@@ -41,13 +45,14 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
 
         public string SerializeNodes(IEnumerable<INode> nodes) {
-            Log.Info("Serialize called");
-            return "";
+            return nodes.Select(x => ((GraphNode)x).RealNode).ToArray().SerializePolymorphic().ToString();
         }
 
         public IEnumerable<INode> DeserializeNodes(string serialized) {
-            Log.Info("Deserialize called");
-            return [];
+            var arr = (JsonArray)JsonNode.Parse(serialized);
+            var jobNodes = arr.DeserializePolymorphic<JobNode>();
+            var graphNodes = jobNodes.Select(x => new GraphNode(this, x));
+            return graphNodes.ToArray();
         }
 
         public void RebuildFromGraph() {
