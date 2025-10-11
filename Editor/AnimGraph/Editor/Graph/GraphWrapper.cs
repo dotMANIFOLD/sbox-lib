@@ -52,7 +52,12 @@ namespace MANIFOLD.AnimGraph.Editor {
             var arr = (JsonArray)JsonNode.Parse(serialized);
             var jobNodes = arr.DeserializePolymorphic<JobNode>();
             var graphNodes = jobNodes.Select(x => new GraphNode(this, x));
-            return graphNodes.ToArray();
+
+            foreach (var node in graphNodes) {
+                AddNode(node);
+            }
+            
+            return graphNodes;
         }
 
         public void RebuildFromGraph() {
