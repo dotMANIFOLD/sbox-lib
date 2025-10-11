@@ -60,6 +60,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         public bool Looping { get; set; }
         public bool Interpolate { get; set; }
         public float Time { get; set; }
+        public bool ResetZerosTime { get; set; } = true;
         
         public IReadOnlyList<Output<JobResults>> Outputs => outputs;
         IReadOnlyList<IOutputSocket> IOutputJob.Outputs => outputs;
@@ -86,7 +87,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
         
         public void Reset() {
-            Time = 0;
+            if (ResetZerosTime) Time = 0;
         }
 
         public void Prepare() {

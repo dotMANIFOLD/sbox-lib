@@ -40,6 +40,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
 
             job.PlaybackSpeed = 0;
             job.Time = (1f / job.Clip.FrameRate) * Frame;
+            job.ResetZerosTime = false;
             
             return job;
         }
