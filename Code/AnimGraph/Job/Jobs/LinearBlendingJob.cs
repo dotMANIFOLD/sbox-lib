@@ -51,7 +51,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
         
         public void RecalculateWeights() {
-            if (weights.Length > 1) {
+            if (weights.Length > 2) {
                 float closestLeft = -1000000;
                 int leftIndex = 0;
                 float closestRight = 1000000;
@@ -71,6 +71,11 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 float rightWeight = BlendValue.LerpInverse(blendPoints[leftIndex], blendPoints[rightIndex]);
                 weights[rightIndex] = rightWeight;
                 weights[leftIndex] = 1;
+            } else if (weights.Length == 2) {
+                weights[0] = 1;
+                weights[1] = BlendValue.LerpInverse(blendPoints[0], blendPoints[1]);
+            } else if (weights.Length == 1) {
+                weights[0] = 1;
             }
         }
 
