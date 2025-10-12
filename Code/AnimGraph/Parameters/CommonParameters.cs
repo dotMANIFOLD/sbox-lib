@@ -99,6 +99,10 @@ namespace MANIFOLD.AnimGraph.Parameters {
 
     [ExposeToAnimGraph(Color = "#ce1c5d")]
     public class RotationParameter : Parameter<Rotation> {
+        public RotationParameter() {
+            DefaultValue = Rotation.Identity;
+        }
+        
         public override Parameter Clone() {
             return new RotationParameter() {
                 ID = ID,
