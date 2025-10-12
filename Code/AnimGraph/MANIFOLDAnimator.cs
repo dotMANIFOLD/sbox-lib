@@ -89,6 +89,9 @@ namespace MANIFOLD.AnimGraph {
         protected override void OnAwake() {
             OnSoundEvent = OnSoundEventDefault;
             OnBodyGroupEvent = OnBodyGroupEventDefault;
+            
+            RebuildParameters();
+            RebuildTags();
         }
 
         protected override void OnEnabled() {
