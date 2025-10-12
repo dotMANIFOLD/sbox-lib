@@ -20,4 +20,10 @@ namespace MANIFOLD.AnimGraph {
     /// </summary>
     [AttributeUsage(AttributeTargets.Property)]
     public class UpdatesInputsAttribute : Attribute { }
+    
+    /// <summary>
+    /// Marks this property as a bone. Only works for <see cref="string"/>.
+    /// </summary>
+    [AttributeUsage(AttributeTargets.Property)]
+    public class BoneAttribute : Attribute { }
 }
