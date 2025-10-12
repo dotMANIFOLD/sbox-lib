@@ -51,6 +51,11 @@ namespace MANIFOLD.AnimGraph.Editor {
         public IEnumerable<INode> DeserializeNodes(string serialized) {
             var arr = (JsonArray)JsonNode.Parse(serialized);
             var jobNodes = arr.DeserializePolymorphic<JobNode>();
+            foreach (var node in jobNodes) {
+                node.ID = Guid.NewGuid();
+            }
+            // TODO: add way of keeping them linked together
+            
             var graphNodes = jobNodes.Select(x => new GraphNode(this, x));
 
             foreach (var node in graphNodes) {
