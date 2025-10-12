@@ -113,4 +113,21 @@ namespace MANIFOLD.AnimGraph.Parameters {
             };
         }
     }
+
+    [ExposeToAnimGraph(Color = $"#e8c8b1")]
+    public class TransformParameter : Parameter<Transform> {
+        public TransformParameter() {
+            DefaultValue = Transform.Zero;
+        }
+        
+        public override Parameter Clone() {
+            return new TransformParameter() {
+                ID = ID,
+                Name = Name,
+                AutoReset = AutoReset,
+                backingField = backingField,
+                DefaultValue = DefaultValue
+            };
+        }
+    }
 }
