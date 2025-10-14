@@ -113,6 +113,19 @@ namespace MANIFOLD.AnimGraph.Parameters {
             };
         }
     }
+    
+    [ExposeToAnimGraph(Color = "#db163a")]
+    public class AnglesParameter : Parameter<Angles> {
+        public override Parameter Clone() {
+            return new AnglesParameter() {
+                ID = ID,
+                Name = Name,
+                AutoReset = AutoReset,
+                backingField = backingField,
+                DefaultValue = DefaultValue
+            };
+        }
+    }
 
     [ExposeToAnimGraph(Color = $"#e8c8b1")]
     public class TransformParameter : Parameter<Transform> {
