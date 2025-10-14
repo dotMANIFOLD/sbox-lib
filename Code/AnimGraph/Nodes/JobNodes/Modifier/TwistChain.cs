@@ -34,6 +34,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
             job.PitchCurve = PitchCurve;
             job.YawCurve = YawCurve;
             job.RollCurve = RollCurve;
+            job.Space = Space;
 
             if (Parameter.IsValid) {
                 job.Parameter = ctx.parameters.Get<Angles>(Parameter.ID.Value);
