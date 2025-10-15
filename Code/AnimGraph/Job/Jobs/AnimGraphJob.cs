@@ -59,7 +59,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             jobsEnumerable = new List<IJob>() { mainGroup, this };
             
             var branches = this.ResolveBranchesFlat(false);
-            foreach (var level in branches.GroupBy(x => x.depth).OrderByDescending(x => x.Key)) {
+            foreach (var level in branches.GroupBy(x => x.Depth).OrderByDescending(x => x.Key)) {
                 JobGroup group = null;
                 if (level.Count() > 1) group = new JobGroup().SetGraph(mainGroup);
                 foreach (var branch in level) {

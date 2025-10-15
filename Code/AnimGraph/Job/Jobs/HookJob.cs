@@ -41,7 +41,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
 
             if (root is IInputAnimJob input) {
                 var branches = input.ResolveBranchesFlat();
-                foreach (var level in branches.GroupBy(x => x.depth).OrderByDescending(x => x.Key)) {
+                foreach (var level in branches.GroupBy(x => x.Depth).OrderByDescending(x => x.Key)) {
                     JobGroup group = null;
                     if (level.Count() > 1) group = new JobGroup().SetGraph(topGroup);
                     foreach (var branch in level) {

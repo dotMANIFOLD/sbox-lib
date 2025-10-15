@@ -12,9 +12,11 @@ namespace MANIFOLD.Jobs {
             /// In execution order.
             /// </summary>
             public List<IJob> jobs = new();
-            public List<JobBranch> entryPoints = new();
-            public List<JobBranch> executes = new();
-            public int depth = 0;
+            public HashSet<JobBranch> entryPoints = new();
+            public HashSet<JobBranch> executes = new();
+            public int? setDepth;
+
+            public int Depth => setDepth ?? entryPoints.Max(x => x.Depth) + 1;
 
             /// <summary>
             /// Creates a new graph and sets all jobs in this branch to it
@@ -195,6 +197,7 @@ namespace MANIFOLD.Jobs {
         public static JobBranch ResolveBranches(this IInputJob job, bool includeSelf = true) {
             Dictionary<IJob, JobBranch> branchCache = new Dictionary<IJob, JobBranch>();
             JobBranch initialBranch = new JobBranch();
+            initialBranch.setDepth = 0;
             if (includeSelf) initialBranch.jobs.Add(job);
             branchCache.Add(job, initialBranch);
             ResolveBranchesInternal(job, initialBranch, branchCache);
@@ -208,6 +211,7 @@ namespace MANIFOLD.Jobs {
         public static IEnumerable<JobBranch> ResolveBranchesFlat(this IInputJob job, bool includeSelf = true) {
             Dictionary<IJob, JobBranch> branchCache = new Dictionary<IJob, JobBranch>();
             JobBranch initialBranch = new JobBranch();
+            initialBranch.setDepth = 0;
             if (includeSelf) initialBranch.jobs.Add(job);
             branchCache.Add(job, initialBranch);
             ResolveBranchesInternal(job, initialBranch, branchCache);
@@ -215,53 +219,59 @@ namespace MANIFOLD.Jobs {
         }
 
         private static void ResolveBranchesInternal(IInputJob job, JobBranch currentBranch, Dictionary<IJob, JobBranch> branchCache) {
-            bool singleBranch = false;
-            if (job.Inputs.Count > 1) {
-                if (job.Inputs.All(x => x != null && x.Job == job.Inputs[0].Job)) {
-                    singleBranch = true;
+            var validSockets = job.Inputs.Index().Where(x => x.Item != null && x.Item.Job != job).ToArray();
+            if (validSockets.Length <= 0) return;
+            
+            var jobGroupings = validSockets.GroupBy(x => x.Item.Job).ToArray();
+            if (jobGroupings.Length == 1) {
+                // SINGLE BRANCH
+                var group = jobGroupings[0];
+                bool inBranch = branchCache.TryGetValue(group.Key, out JobBranch existingBranch);
+
+                if (inBranch) {
+                    currentBranch.executes.Add(existingBranch);
+                    existingBranch.entryPoints.Add(currentBranch);
+                    // no need to resolve the branch, if its created its already resolved
                 } else {
-                    foreach (var input in job.Inputs) {
-                        if (input.Job == job) continue; // skip self
-
-                        bool inBranch = branchCache.TryGetValue(input.Job, out JobBranch nextBranch);
-                        
-                        void CreateNewBranch(IJob job) {
-                            nextBranch = new JobBranch();
-                            nextBranch.depth = currentBranch.depth + 1;
-                            nextBranch.jobs.Insert(0, job);
-                            branchCache[job] = nextBranch;
-
-                            if (job is IInputJob casted) {
-                                ResolveBranchesInternal(casted, nextBranch, branchCache);
-                            }
-                        }
-                        
-                        if (inBranch) {
-                            if (currentBranch.depth >= nextBranch.depth) {
-                                nextBranch.jobs.Remove(input.Job);
-                                CreateNewBranch(input.Job);
-                            }
-                        } else {
-                            CreateNewBranch(input.Job);
-                        }
-                        
-                        if (!currentBranch.executes.Contains(nextBranch)) {
-                            currentBranch.executes.Add(nextBranch);
-                            nextBranch.entryPoints.Add(currentBranch);
-                        }
+                    currentBranch.jobs.Insert(0, group.Key);
+                    branchCache[group.Key] = currentBranch;
+                    
+                    if (group.Key is IInputJob casted) {
+                        ResolveBranchesInternal(casted, currentBranch, branchCache);
                     }
                 }
-            } else if (job.Inputs.Count == 1) {
-                singleBranch = true;
-            }
+            } else {
+                // MULTI BRANCH
+                foreach (var group in jobGroupings) {
+                    bool inBranch = branchCache.TryGetValue(group.Key, out JobBranch nextBranch);
 
-            if (singleBranch) {
-                currentBranch.jobs.Insert(0, job.Inputs[0].Job);
-                branchCache.Add(job.Inputs[0].Job, currentBranch);
-                if (job.Inputs[0].Job is IInputJob casted) {
-                    ResolveBranchesInternal(casted, currentBranch, branchCache);
+                    if (!inBranch) {
+                        nextBranch = new JobBranch();
+                        nextBranch.jobs.Add(group.Key);
+                        branchCache[group.Key] = nextBranch;
+                    }
+                    
+                    currentBranch.executes.Add(nextBranch);
+                    nextBranch.entryPoints.Add(currentBranch);
+                    
+                    if (!inBranch && group.Key is IInputJob casted) {
+                        ResolveBranchesInternal(casted, nextBranch, branchCache);
+                    }
                 }
             }
+        }
+
+        private static void ResolveBranchesInternalSocket(IInputSocket socket, JobBranch currentBranch, Dictionary<IJob, JobBranch> branchCache) {
+            if (socket.Job == null) return;
+            
+            bool inBranch = branchCache.TryGetValue(socket.Job, out JobBranch socketBranch);
+
+            if (!inBranch) {
+                socketBranch = new JobBranch();
+            }
+            
+            socketBranch.entryPoints.Add(currentBranch);
+            currentBranch.executes.Add(socketBranch);
         }
         
         public static void GetAllRoots(this IJob job, List<IJob> list) {
