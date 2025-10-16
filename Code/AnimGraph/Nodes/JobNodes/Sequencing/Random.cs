@@ -33,7 +33,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [Hide, JsonIgnore]
         public override Color AccentColor => JobCategories.SEQUENCING_COLOR;
         
-        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
+        public override IBaseAnimJob CreateJob(JobCreationContext ctx) {
             var job = new RandomJob(ID, Options.Length);
             job.UseRandomWeights = UseWeights;
             if (UseWeights) {

@@ -14,7 +14,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [Hide, JsonIgnore]
         public override Color AccentColor => JobCategories.HOOK_COLOR;
         
-        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
+        public override IBaseAnimJob CreateJob(JobCreationContext ctx) {
             return new HookJob(ID);
         }
 

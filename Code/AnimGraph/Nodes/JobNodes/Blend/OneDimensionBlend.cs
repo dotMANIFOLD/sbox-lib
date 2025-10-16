@@ -35,7 +35,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [JsonIgnore, Hide]
         public override Color AccentColor => JobCategories.BLEND_COLOR;
 
-        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
+        public override IBaseAnimJob CreateJob(JobCreationContext ctx) {
             var job = new LinearBlendingJob(ID, Points.Select(x => x.Value).ToArray());
             if (Parameter.ID.HasValue) {
                 job.BlendParameter = ctx.parameters.Get<float>(Parameter.ID.Value);

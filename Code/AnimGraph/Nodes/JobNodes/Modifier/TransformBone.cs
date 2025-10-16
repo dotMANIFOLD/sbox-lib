@@ -34,7 +34,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [Hide, JsonIgnore]
         public override Color AccentColor => JobCategories.MODIFIER_COLOR;
         
-        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
+        public override IBaseAnimJob CreateJob(JobCreationContext ctx) {
             var job = new TransformBoneJob(ID);
             
             job.TargetBone = TargetBone;

@@ -24,7 +24,7 @@ namespace MANIFOLD.AnimGraph.Nodes {
         [JsonIgnore, Hide]
         public override Color AccentColor => JobCategories.MODIFIER_COLOR;
         
-        public override IBaseAnimJob CreateJob(in JobCreationContext ctx) {
+        public override IBaseAnimJob CreateJob(JobCreationContext ctx) {
             var job = new AddJob(ID);
             job.ResetChild1 = ResetBaseChild;
             job.ResetChild2 = ResetAdditiveChild;
