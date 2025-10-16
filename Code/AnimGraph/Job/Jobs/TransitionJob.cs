@@ -72,7 +72,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             }
             if (ResetOnChange) {
                 var targetJob = Inputs[targetIndex].Job;
-                if (targetJob != null && targetJob is IAnimJob animJob) {
+                if (targetJob != null && targetJob is IBaseAnimJob animJob) {
                     animJob.Reset();
                 }
             }
