@@ -82,6 +82,20 @@ namespace MANIFOLD.AnimGraph.Editor {
             ShowSheet(sheet);
         }
 
+        public void SetObject(object value) {
+            Layout.Clear(true);
+
+            if (value == null) {
+                ShowLabel(EMPTY_LABEL);
+                return;
+            }
+
+            serialized = value.GetSerialized();
+            var sheet = new ControlSheet();
+            sheet.AddObject(serialized, DefaultSheetFilter);
+            ShowSheet(sheet);
+        }
+        
         private void ShowSheet(ControlSheet sheet) {
             var scroll = new ScrollArea(this);
             scroll.Canvas = new Widget();

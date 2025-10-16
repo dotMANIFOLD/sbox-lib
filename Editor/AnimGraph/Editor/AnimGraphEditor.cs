@@ -38,6 +38,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         private Guid? selectedParameterGuid;
 
         private bool inPreview;
+
+        public InspectorPanel InspectorPanel => inspectorPanel;
         
         public Asset GraphAsset => graphAsset;
         public AnimGraph GraphResource => graphResource;
