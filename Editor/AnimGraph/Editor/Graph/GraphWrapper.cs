@@ -8,6 +8,7 @@ using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class GraphWrapper : IGraph {
+        public readonly AnimGraphEditor editor;
         private Dictionary<Guid, GraphNode> nodes;
         
         public AnimGraph Graph { get; }
@@ -15,8 +16,9 @@ namespace MANIFOLD.AnimGraph.Editor {
         public IReadOnlyDictionary<Guid, GraphNode> Nodes => nodes;
         IEnumerable<INode> IGraph.Nodes => nodes.Values;
         
-        public GraphWrapper(AnimGraph graph) {
+        public GraphWrapper(AnimGraph graph, AnimGraphEditor editor = null) {
             nodes = new Dictionary<Guid, GraphNode>();
+            this.editor = editor;
             
             Graph = graph;
             RebuildFromGraph();

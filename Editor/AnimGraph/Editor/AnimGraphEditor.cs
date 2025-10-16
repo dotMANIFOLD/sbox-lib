@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Editor;
 using Editor.NodeEditor;
+using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     [EditorForAssetType(AnimGraph.EXTENSION)]
@@ -23,6 +24,9 @@ namespace MANIFOLD.AnimGraph.Editor {
         private ParameterPanel parameterPanel;
         private TagPanel tagPanel;
         private AnimGraphView graphView;
+
+        private Dictionary<Type, TypeDescription> nodeTools;
+        private Dictionary<object, EditorWidget> openTools;
 
         private Asset graphAsset;
         private AnimGraph graphResource;
@@ -67,6 +71,8 @@ namespace MANIFOLD.AnimGraph.Editor {
             }
         }
 
+        public IReadOnlyDictionary<Type, TypeDescription> NodeTools => nodeTools;
+        
         public bool InPreview {
             get => inPreview;
             set {
@@ -101,6 +107,14 @@ namespace MANIFOLD.AnimGraph.Editor {
             dock.SetSizeMode(SizeMode.Flexible, SizeMode.Flexible);
             
             Canvas.Layout.Add(dock);
+
+            nodeTools = new Dictionary<Type, TypeDescription>();
+            openTools = new Dictionary<object, EditorWidget>();
+            nodeTools = EditorTypeLibrary
+                .GetTypesWithAttribute<AnimGraphToolAttribute>()
+                .Where(x => x.Type.TargetType.IsAssignableTo(typeof(EditorWidget)))
+                .DistinctBy(x => x.Attribute.targetType)
+                .ToDictionary(x => x.Attribute.targetType, x => x.Type);
             
             DefaultDockState();
             
@@ -112,7 +126,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             
             graphAsset = asset;
             graphResource = GraphAsset.LoadResource<AnimGraph>();
-            graphWrapper = new GraphWrapper(GraphResource);
+            graphWrapper = new GraphWrapper(GraphResource, this);
             
             SetContext(CONTEXT_GRAPH, graphResource);
             EditorEvent.Run(EVENT_GRAPH_LOAD);
@@ -124,6 +138,26 @@ namespace MANIFOLD.AnimGraph.Editor {
             throw new NotImplementedException(); // what the hell does this do
         }
 
+        public EditorWidget OpenTool(object data) {
+            if (openTools.TryGetValue(data, out EditorWidget widget)) {
+                dock.RaiseDock(widget);
+                return widget;
+            }
+
+            if (!nodeTools.TryGetValue(data.GetType(), out var type)) return null;
+            
+            widget = type.Create<EditorWidget>([this]);
+            widget.Open(data);
+
+            widget.OnDestroyedEvent = () => {
+                openTools.Remove(data);
+            };
+            dock.AddDock(graphView, widget, DockArea.Inside);
+            openTools.Add(data, widget);
+            return widget;
+        }
+        
+        // UI HELPERS
         private void CreateMenuBar() {
             {
                 var file = MenuBar.AddMenu("File");

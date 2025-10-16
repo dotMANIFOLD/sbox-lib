@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Editor;
 using Editor.NodeEditor;
@@ -6,7 +7,7 @@ using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
     public class AnimGraphView : GraphView {
-        private readonly AnimGraphEditor editor;
+        public readonly AnimGraphEditor editor;
         private List<INodeType> availableNodes;
         
         public AnimGraphView(AnimGraphEditor editor) : base(editor) {
@@ -18,7 +19,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
             base.OnSelectionChanged += OnSelectionChanged;
             
-            availableNodes = TypeLibrary
+            availableNodes = EditorTypeLibrary
                 .GetTypesWithAttribute<ExposeToAnimGraphAttribute>()
                 .Where(x => x.Type.TargetType.IsAssignableTo(typeof(JobNode)))
                 .Select(x => (INodeType)new ClassNodeType(x.Type))

@@ -8,9 +8,11 @@ namespace MANIFOLD.AnimGraph.Editor {
     public class JobNodeUI : NodeUI {
         public Color AccentColor { get; set; }
         
+        private AnimGraphView betterView;
         private GraphNode betterNode;
 
         public JobNodeUI(GraphView graph, GraphNode node) : base(graph, node) {
+            betterView = (AnimGraphView)graph;
             betterNode = node;
         }
 
@@ -72,6 +74,16 @@ namespace MANIFOLD.AnimGraph.Editor {
                     Paint.ClearPen();
                     Paint.SetBrush(PrimaryColor.Darken(0.6f));
                     Paint.DrawRect(rect.Shrink(borderSize, TitleHeight, borderSize, borderSize), radius - 2);
+                }
+
+                if (betterView.editor.NodeTools.ContainsKey(betterNode.RealNode.GetType())) {
+                    var iconRect = titleRect;
+                    iconRect.Left = iconRect.Width - iconRect.Height;
+                    iconRect = iconRect.Shrink(2);
+                    
+                    Paint.SetPen(PrimaryColor.Lighten(0.8f));
+                    Paint.ClearBrush();
+                    Paint.DrawIcon(iconRect, "launch", iconRect.Height);
                 }
             } else if (Node.DisplayInfo.Icon is { } icon) {
                 // Node is an icon without text, e.g. for operators
