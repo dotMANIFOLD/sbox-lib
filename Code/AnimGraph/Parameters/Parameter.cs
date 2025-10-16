@@ -11,6 +11,11 @@ namespace MANIFOLD.AnimGraph {
         [Hide, JsonIgnore]
         public Action OnChanged { get; set; }
         
+        [Hide, JsonIgnore]
+        public abstract object ObjectValue { get; }
+        [Hide, JsonIgnore]
+        public abstract Type DataType { get; }
+        
         public abstract void Reset();
         public abstract Parameter Clone();
     }
@@ -29,6 +34,11 @@ namespace MANIFOLD.AnimGraph {
                 OnChanged?.Invoke();
             }
         }
+
+        [Hide, JsonIgnore]
+        public sealed override object ObjectValue => backingField;
+        [Hide, JsonIgnore]
+        public sealed override Type DataType => typeof(T);
 
         public override void Reset() {
             backingField = DefaultValue;
