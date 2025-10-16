@@ -98,8 +98,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
             if (clip == null || trackCache == null) return;
             
             float interval = (1 / clip.FrameRate);
-            float frame = Time / (1 / clip.FrameRate);
-            int frameAsInt = frame.FloorToInt();
+            float frame = MathF.Min(Time, Clip.Duration) / (1 / clip.FrameRate);
+            int frameAsInt = Math.Min(frame.FloorToInt(), clip.FrameCount - 1);
             float lerpFactor = frame - frameAsInt;
 
             for (int i = 0; i < workingPose.BoneCount; i++) {
