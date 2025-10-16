@@ -16,6 +16,6 @@ namespace MANIFOLD.AnimGraph.Editor {
             OnDestroyedEvent?.Invoke();
         }
 
-        public abstract void Open(object data);
+        public abstract void Open(GraphNode data);
     }
 }

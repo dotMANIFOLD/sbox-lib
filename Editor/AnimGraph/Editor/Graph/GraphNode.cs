@@ -184,7 +184,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         }
 
         public virtual void OnDoubleClick(MouseEvent e) {
-            graph.editor.OpenTool(realNode);
+            graph.editor.OpenTool(this);
         }
         
         public virtual NodeUI CreateUI(GraphView view) {

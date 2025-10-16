@@ -26,7 +26,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         private AnimGraphView graphView;
 
         private Dictionary<Type, TypeDescription> nodeTools;
-        private Dictionary<object, EditorWidget> openTools;
+        private Dictionary<JobNode, EditorWidget> openTools;
 
         private Asset graphAsset;
         private AnimGraph graphResource;
@@ -111,7 +111,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             Canvas.Layout.Add(dock);
 
             nodeTools = new Dictionary<Type, TypeDescription>();
-            openTools = new Dictionary<object, EditorWidget>();
+            openTools = new Dictionary<JobNode, EditorWidget>();
             nodeTools = EditorTypeLibrary
                 .GetTypesWithAttribute<AnimGraphToolAttribute>()
                 .Where(x => x.Type.TargetType.IsAssignableTo(typeof(EditorWidget)))
@@ -140,22 +140,22 @@ namespace MANIFOLD.AnimGraph.Editor {
             throw new NotImplementedException(); // what the hell does this do
         }
 
-        public EditorWidget OpenTool(object data) {
-            if (openTools.TryGetValue(data, out EditorWidget widget)) {
+        public EditorWidget OpenTool(GraphNode data) {
+            if (openTools.TryGetValue(data.RealNode, out EditorWidget widget)) {
                 dock.RaiseDock(widget);
                 return widget;
             }
 
-            if (!nodeTools.TryGetValue(data.GetType(), out var type)) return null;
+            if (!nodeTools.TryGetValue(data.RealNode.GetType(), out var type)) return null;
             
             widget = type.Create<EditorWidget>([this]);
             widget.Open(data);
 
             widget.OnDestroyedEvent = () => {
-                openTools.Remove(data);
+                openTools.Remove(data.RealNode);
             };
             dock.AddDock(graphView, widget, DockArea.Inside);
-            openTools.Add(data, widget);
+            openTools.Add(data.RealNode, widget);
             return widget;
         }
         
