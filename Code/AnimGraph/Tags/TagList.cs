@@ -54,17 +54,6 @@ namespace MANIFOLD.AnimGraph {
             return tagsByName.GetValueOrDefault(name);
         }
         
-        // SET
-        public void Set(Guid id, bool state) {
-            if (!tags.ContainsKey(id)) return;
-            tags[id].State = state;
-        }
-
-        public void Set(string name, bool state) {
-            if (!tagsByName.ContainsKey(name)) return;
-            tagsByName[name].State = state;
-        }
-        
         public IEnumerator<Tag> GetEnumerator() {
             return tags.Values.GetEnumerator();
         }

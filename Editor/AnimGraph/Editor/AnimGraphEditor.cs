@@ -32,10 +32,12 @@ namespace MANIFOLD.AnimGraph.Editor {
         private AnimGraph graphResource;
         private GraphWrapper graphWrapper;
         
-        private IEnumerable<BaseNode> selectedNodeses;
+        private IEnumerable<BaseNode> selectedNodes;
         private IEnumerable<Guid> selectedNodeGuids;
         private Parameter selectedParameter;
         private Guid? selectedParameterGuid;
+        private Tag selectedTag;
+        private Guid? selectedTagGuid;
 
         private bool inPreview;
 
@@ -46,14 +48,14 @@ namespace MANIFOLD.AnimGraph.Editor {
         public GraphWrapper GraphWrapper => graphWrapper;
 
         public IEnumerable<BaseNode> SelectedNodes {
-            get => selectedNodeses;
+            get => selectedNodes;
             set {
-                var oldParam = selectedParameter;
-                
-                selectedNodeses = value;
+                selectedNodes = value;
                 selectedNodeGuids = value.Select(x => x.ID);
                 selectedParameter = null;
                 selectedParameterGuid = null;
+                selectedTag = null;
+                selectedTagGuid = null;
                 
                 inspectorPanel.SetNodes(value);
             }
@@ -61,15 +63,30 @@ namespace MANIFOLD.AnimGraph.Editor {
         public Parameter SelectedParameter {
             get => selectedParameter;
             set {
-                var oldParam = selectedParameter;
-                
+                selectedNodes = null;
+                selectedParameterGuid = null;
                 selectedParameter = value;
                 selectedParameterGuid = selectedParameter?.ID;
-                selectedNodeses = null;
-                selectedParameterGuid = null;
+                selectedTag = null;
+                selectedTagGuid = null;
                 
                 graphView.ClearSelection();
                 inspectorPanel.SetParameter(value);
+            }
+        }
+
+        public Tag SelectedTag {
+            get => selectedTag;
+            set {
+                selectedNodes = null;
+                selectedParameterGuid = null;
+                selectedParameter = null;
+                selectedParameterGuid = null;
+                selectedTag = value;
+                selectedTagGuid = value?.ID;
+                
+                graphView.ClearSelection();
+                inspectorPanel.SetObject(value);
             }
         }
 
@@ -230,7 +247,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             graphWrapper = new GraphWrapper(GraphResource);
 
             if (selectedNodeGuids != null) {
-                selectedNodeses = selectedNodeGuids.Select(x => graphResource.Nodes[x]);
+                selectedNodes = selectedNodeGuids.Select(x => graphResource.Nodes[x]);
             }
             if (selectedParameterGuid.HasValue) {
                 selectedParameter = graphResource.Parameters[selectedParameterGuid.Value];

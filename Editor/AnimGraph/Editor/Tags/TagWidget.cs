@@ -12,18 +12,28 @@ namespace MANIFOLD.AnimGraph.Editor {
         private readonly AnimGraphEditor editor;
 
         private Tag tag;
-        private Color rectColor;
+        private Tag previewTag;
         private Rect nameRect;
 
         public Tag Tag {
             get => tag;
             set {
                 tag = value;
-                GetRenderValues();
             }
         }
 
-        public Tag PreviewTag { get; set; }
+        public Tag PreviewTag {
+            get => previewTag;
+            set {
+                if (previewTag != null) {
+                    previewTag.OnStateChanged -= OnPreviewUpdate;
+                }
+                previewTag = value;
+                if (previewTag != null) {
+                    previewTag.OnStateChanged += OnPreviewUpdate;
+                }
+            }
+        }
         
         public TagWidget(AnimGraphEditor editor, Widget parent = null) : base(parent) {
             this.editor = editor;
@@ -32,6 +42,11 @@ namespace MANIFOLD.AnimGraph.Editor {
             FocusMode = FocusMode.Click;
 
             Layout = Layout.Row();
+        }
+
+        protected override void OnFocus(FocusChangeReason reason) {
+            base.OnFocus(reason);
+            editor.SelectedTag = tag;
         }
 
         protected override void OnDoubleClick(MouseEvent e) {
@@ -74,6 +89,12 @@ namespace MANIFOLD.AnimGraph.Editor {
             // COLOR RECT
             Rect colorRect = rect;
             colorRect.Width = COLOR_WIDTH;
+            Color rectColor = tag.Type switch {
+                Tag.TagType.Event => "#2250AB",
+                Tag.TagType.Internal => "#AB2252",
+                _ => "#FF00FF"
+            };
+            
             Paint.SetBrush(rectColor);
             Paint.ClearPen();
             Paint.DrawRect(colorRect);
@@ -98,7 +119,7 @@ namespace MANIFOLD.AnimGraph.Editor {
 
                 if (PreviewTag != null) {
                     circleRect = circleRect.Shrink(CIRCLE_INNER_PADDING);
-                    Color innerCircleColor = tag.State ? Theme.Green : Theme.Red;
+                    Color innerCircleColor = previewTag.State ? Theme.Green : Theme.Red;
                     Paint.SetBrushAndPen(innerCircleColor);
                     Paint.DrawCircle(circleRect);
                 } 
@@ -118,13 +139,9 @@ namespace MANIFOLD.AnimGraph.Editor {
             editor.GraphResource.StateHasChanged();
             EditorEvent.Run(TagPanel.EVENT_REFRESH);
         }
-        
-        private void GetRenderValues() {
-            rectColor = tag.Type switch {
-                Tag.TagType.Event => "#2250AB",
-                Tag.TagType.Internal => "#AB2252",
-                _ => "#FF00FF"
-            };
+
+        private void OnPreviewUpdate(Tag tag) {
+            Update();
         }
     }
 }
