@@ -12,8 +12,9 @@ namespace MANIFOLD.AnimGraph.Nodes {
     [Category(JobCategories.BLEND)]
     [ExposeToAnimGraph]
     public class TwoDimensionBlend : JobNode {
-        public class BlendPoint : INodeRefProvider {
+        public class BlendPoint : INodeRefProvider, INameProvider {
             public NodeRef Input { get; set; } = new NodeRef(null);
+            [UpdatesInputs]
             public string Name { get; set; } = "Unnamed";
             public Vector2 Value { get; set; }
             

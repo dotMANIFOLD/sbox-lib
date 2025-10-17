@@ -12,9 +12,10 @@ namespace MANIFOLD.AnimGraph.Nodes {
     [Category(JobCategories.BLEND)]
     [ExposeToAnimGraph]
     public class OneDimensionBlend : JobNode {
-        public class BlendPoint : INodeRefProvider {
+        public class BlendPoint : INodeRefProvider, INameProvider {
             [ReadOnly]
             public NodeRef Input { get; set; } = new NodeRef(null);
+            [UpdatesInputs]
             public string Name { get; set; } = "Unnamed";
             public float Value { get; set; }
             

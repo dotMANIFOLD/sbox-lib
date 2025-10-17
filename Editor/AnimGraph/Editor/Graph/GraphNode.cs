@@ -263,6 +263,10 @@ namespace MANIFOLD.AnimGraph.Editor {
                         
                         DisplayInfo info = default;
                         info.Name = $"Slot {count}";
+                        if (provider is INameProvider nameProvider) {
+                            if (nameProvider.Name != "Unnamed") info.Name = nameProvider.Name;
+                        }
+                        
                         inputs.Add(new InputData(InputOrigin.Collection, refObj, info));
                         count++;
                     }
@@ -278,6 +282,10 @@ namespace MANIFOLD.AnimGraph.Editor {
                         continue;
                     }
                     
+                    DisplayInfo info = DisplayInfo.ForMember(prop);
+                    if (prop.GetValue(realNode) is INameProvider nameProvider) {
+                        if (nameProvider.Name != "Unnamed") info.Name = nameProvider.Name;
+                    }
                     inputs.Add(new InputData(InputOrigin.Property, refObj, DisplayInfo.ForMember(prop)));
                 } else {
                     Log.Warning("No matching type for this input!");

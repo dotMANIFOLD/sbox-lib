@@ -28,4 +28,8 @@ namespace MANIFOLD.AnimGraph {
         public NodeRef Reference { get; }
         public string RefFieldName { get; }
     }
+
+    public interface INameProvider {
+        public string Name { get; }
+    }
 }
