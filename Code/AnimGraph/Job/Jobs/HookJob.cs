@@ -84,7 +84,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 weights[activeBranch] = 0;
             }
 
-            if (idToIndex.TryGetValue(id, out int index)) {
+            if (id != null && idToIndex.TryGetValue(id, out int index)) {
                 weights[index] = 1;
                 activeBranch = index;
             } else {
