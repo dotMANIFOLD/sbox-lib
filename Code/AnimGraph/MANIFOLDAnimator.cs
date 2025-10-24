@@ -78,6 +78,11 @@ namespace MANIFOLD.AnimGraph {
         /// Access to this animator's tags.
         /// </summary>
         public TagList TagList => tags;
+
+        /// <summary>
+        /// Whether this animator should automatically update. If false, you can update it manually via <see cref="Update"/>
+        /// </summary>
+        public bool AutoUpdate { get; set; }
         
         public Action<GenericEvent> OnGenericEvent { get; set; }
         public Action<FootstepEvent> OnFootstepEvent { get; set; }
@@ -89,6 +94,8 @@ namespace MANIFOLD.AnimGraph {
         protected override void OnAwake() {
             OnSoundEvent = OnSoundEventDefault;
             OnBodyGroupEvent = OnBodyGroupEventDefault;
+
+            AutoUpdate = true;
             
             RebuildParameters();
             RebuildTags();
@@ -106,13 +113,6 @@ namespace MANIFOLD.AnimGraph {
 
         protected override void OnDestroy() {
             mainGroup?.RemoveFromDebug();
-        }
-
-        protected override void OnUpdate() {
-            // TODO: move updating to the scene system
-            if (isPlaying) {
-                Update(Time.Delta);
-            }
         }
 
         // PLAYING MANAGEMENT
