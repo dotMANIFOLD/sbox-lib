@@ -52,7 +52,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             }
         }
 
-        public override void PreFrame() {
+        protected override void PreFrame() {
             UpdateCamera();
             Scene.EditorTick(time, RealTime.Delta * TimeScale);
             if (animator.IsPlaying) {
@@ -102,9 +102,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             Gizmo.Draw.Grid(Gizmo.GridAxis.XY, 10);
 
             Scene.Camera.UpdateSceneCamera(Gizmo.Camera);
-            GizmoInstance.FirstPersonCamera(Gizmo.Camera, Parent, true);
-            camera.WorldPosition = Gizmo.Camera.Position;
-            camera.WorldRotation = Gizmo.Camera.Rotation;
+            GizmoInstance.FirstPersonCamera(Scene.Camera, Parent, true);
         }
     }
 }
