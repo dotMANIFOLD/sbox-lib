@@ -16,7 +16,8 @@ namespace MANIFOLD.AnimGraph.Editor {
 
             Name = "GraphView";
             WindowTitle = "Node Graph";
-
+            MinimumSize = new Vector2(400, 600);
+            
             base.OnSelectionChanged += OnSelectionChanged;
             
             availableNodes = EditorTypeLibrary
