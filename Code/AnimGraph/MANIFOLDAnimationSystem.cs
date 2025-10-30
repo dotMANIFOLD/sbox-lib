@@ -12,7 +12,7 @@ namespace MANIFOLD.AnimGraph {
 
         private void UpdateAnimation() {
             var animators = Scene.GetAll<MANIFOLDAnimator>()
-                .Where(x => x.AutoUpdate)
+                .Where(x => x.Enabled && x.AutoUpdate && x.IsPlaying)
                 .ToArray();
 
             try {
