@@ -15,6 +15,11 @@ namespace MANIFOLD.AnimGraph {
                 .Where(x => x.Enabled && x.AutoUpdate && x.IsPlaying)
                 .ToArray();
 
+            foreach (var animator in animators) {
+                // Cache persistent data before threaded updates
+                _ = ModelPersistentData.Get(animator.Renderer.Model);
+            }
+            
             try {
                 Parallel.ForEach(animators, ProcessAnimator);
             } catch (Exception e) {
