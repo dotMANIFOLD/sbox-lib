@@ -1,4 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using MANIFOLD.Animation;
 using MANIFOLD.Jobs;
 
 namespace MANIFOLD.AnimGraph {
@@ -17,6 +20,21 @@ namespace MANIFOLD.AnimGraph {
             if (ResetChild2) {
                 if (inputs[1].Job is IBaseAnimJob animJob) animJob.Reset();
             }
+        }
+
+        protected void CreateOutput(Pose pose) {
+            var baseOutput = inputs[0].Job?.OutputData ?? new JobResults(null);
+            
+            var baseEvents = baseOutput.TriggeredEvents;
+            var childEvents = inputs[1].Job?.OutputData?.TriggeredEvents;
+            List<IEvent> outputEvents;
+            if (childEvents is { Count: > 0 }) {
+                outputEvents = baseEvents?.Concat(childEvents).ToList() ?? childEvents;
+            } else {
+                outputEvents = baseEvents;
+            }
+
+            OutputData = baseOutput with { Pose = pose, TriggeredEvents = outputEvents };
         }
     }
 }

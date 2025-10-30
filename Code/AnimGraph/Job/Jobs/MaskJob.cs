@@ -104,11 +104,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 });
             }
 
-            if (Inputs[0].Job != null) {
-                OutputData = Inputs[0].Job.OutputData with { Pose = workingPose };
-            } else {
-                OutputData = new JobResults(workingPose);
-            }
+            CreateOutput(workingPose);
         }
     }
 }

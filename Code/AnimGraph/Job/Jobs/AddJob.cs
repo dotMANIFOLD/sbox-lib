@@ -21,11 +21,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 original.LocalTransform = Transform.Concat(original.LocalTransform, additive.LocalTransform);
             });
 
-            if (Inputs[0].Job != null) {
-                OutputData = Inputs[0].Job.OutputData with { Pose = workingPose };
-            } else {
-                OutputData = new JobResults(workingPose);
-            }
+            CreateOutput(workingPose);
         }
     }
 }
