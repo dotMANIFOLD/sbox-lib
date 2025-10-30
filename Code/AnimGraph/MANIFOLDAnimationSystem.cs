@@ -11,6 +11,8 @@ namespace MANIFOLD.AnimGraph {
         }
 
         private void UpdateAnimation() {
+            if (Scene.IsEditor) return;
+            
             var animators = Scene.GetAll<MANIFOLDAnimator>()
                 .Where(x => x.Enabled && x.AutoUpdate && x.IsPlaying)
                 .ToArray();
