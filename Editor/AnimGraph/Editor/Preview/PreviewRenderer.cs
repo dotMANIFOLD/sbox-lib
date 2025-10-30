@@ -56,6 +56,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             UpdateCamera();
             Scene.EditorTick(time, RealTime.Delta * TimeScale);
             if (animator.IsPlaying) {
+                animator.Update(RealTime.Delta);
                 time += RealTime.Delta * TimeScale;
             }
             base.PreFrame();
@@ -100,9 +101,7 @@ namespace MANIFOLD.AnimGraph.Editor {
         
         private void UpdateCamera() {
             Gizmo.Draw.Grid(Gizmo.GridAxis.XY, 10);
-
-            Scene.Camera.UpdateSceneCamera(Gizmo.Camera);
-            GizmoInstance.FirstPersonCamera(Scene.Camera, Parent, true);
+            GizmoInstance.FirstPersonCamera(camera, Parent, true);
         }
     }
 }
