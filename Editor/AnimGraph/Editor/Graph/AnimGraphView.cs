@@ -16,7 +16,6 @@ namespace MANIFOLD.AnimGraph.Editor {
 
             Name = "GraphView";
             WindowTitle = "Node Graph";
-            MinimumSize = new Vector2(400, 600);
             
             base.OnSelectionChanged += OnSelectionChanged;
             
@@ -38,6 +37,7 @@ namespace MANIFOLD.AnimGraph.Editor {
                 .Select(x => x.RealNode);
         }
         
+        // [Event(AnimGraphEditor.CONTEXT_GRAPH)]
         private void OnGraphReload() {
             Graph = editor.GraphWrapper;
             RebuildFromGraph();

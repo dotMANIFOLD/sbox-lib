@@ -51,10 +51,6 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             alwaysEvaluateStates = states.Where(s => s.alwaysEvaluate).ToArray();
             this.initialState = initialState;
-        }
-
-        public override void Bind() {
-            base.Bind();
             SetCurrentState(initialState);
         }
 
@@ -75,19 +71,16 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
 
         public override void Reset() {
-            currentState = initialState;
-            timeInState = 0f;
-            stateFinished = false;
-            machineEnded = false;
+            SetCurrentState(initialState);
+            DoTransition(initialState.index);
+            FinishTransition();
             
             base.Reset();
         }
 
         private bool UpdateState(State state) {
             var inputResults = Inputs[state.index].Job;
-            if (inputResults != null) {
-                stateFinished = inputResults.OutputData.Finished;
-            }
+            stateFinished = inputResults?.OutputData?.Finished ?? false;
             
             if (state.transitions == null || state.transitions.Count == 0) return false; 
             

@@ -21,6 +21,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             Layout.AddStretchCell();
         }
 
+        // [Event(AnimGraphEditor.EVENT_GRAPH_LOAD)]
         private void OnGraphReload() {
             sheet.Clear(true);
             sheet.AddObject(editor.GraphResource.GetSerialized());

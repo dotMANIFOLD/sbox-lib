@@ -29,7 +29,7 @@ namespace MANIFOLD.AnimGraph {
             var childEvents = inputs[1].Job?.OutputData?.TriggeredEvents;
             List<IEvent> outputEvents;
             if (childEvents is { Count: > 0 }) {
-                outputEvents = baseEvents?.Concat(childEvents).ToList() ?? childEvents;
+                outputEvents = baseEvents?.Concat(childEvents).Distinct().ToList() ?? childEvents;
             } else {
                 outputEvents = baseEvents;
             }

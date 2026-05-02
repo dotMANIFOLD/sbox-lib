@@ -78,6 +78,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             pauseButton.Foreground = renderer.Paused ? Theme.Blue : Theme.TextButton;
         }
         
+        // [Event(AnimGraphEditor.EVENT_GRAPH_LOAD)]
         private void OnGraphReload() {
             renderer.Graph = editor.GraphResource;
         }

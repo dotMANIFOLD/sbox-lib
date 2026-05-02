@@ -7,6 +7,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Editor;
 using Sandbox;
+using Application = Editor.Application;
 using FileSystem = Editor.FileSystem;
 
 namespace MANIFOLD.Editor {
@@ -190,10 +191,11 @@ namespace MANIFOLD.Editor {
             await Task.WhenAny(success.Task, fail.Task);
             return success.Task.IsCompletedSuccessfully;
         }
-
+        
         private static async ValueTask<bool> DownloadFiles() {
-            using var handle = Progress.Start("Downloading VTools");
-            var token = Progress.GetCancel();
+            using var handle = Application.Editor.ProgressSection();
+            handle.Title = "Downloading VTools";
+            var token = handle.GetCancel();
             var bytes = await Http.RequestBytesAsync(DOWNLOAD_LINK, cancellationToken: token);
 
             if (token.IsCancellationRequested) {

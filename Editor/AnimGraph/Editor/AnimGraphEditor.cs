@@ -245,6 +245,7 @@ namespace MANIFOLD.AnimGraph.Editor {
             graphAsset.SaveToDisk(GraphResource);
             graphResource = GraphAsset.LoadResource<AnimGraph>();
             graphWrapper = new GraphWrapper(GraphResource);
+            SetContext(CONTEXT_GRAPH, graphResource);
 
             if (selectedNodeGuids != null) {
                 selectedNodes = selectedNodeGuids.Select(x => graphResource.Nodes[x]);

@@ -82,6 +82,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
 
         protected virtual void FinishTransition() {
+            if (!inTransition) return;
             inTransition = false;
 
             if (!transitionInvertFade) {

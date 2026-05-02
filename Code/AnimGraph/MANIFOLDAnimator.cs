@@ -88,6 +88,7 @@ namespace MANIFOLD.AnimGraph {
         public Action<FootstepEvent> OnFootstepEvent { get; set; }
         public Action<SoundEvent> OnSoundEvent { get; set; }
         public Action<BodyGroupEvent> OnBodyGroupEvent { get; set; }
+        public Action<Tag> OnTagEvent { get; set; }
         
         public bool IsPlaying => isPlaying;
 
@@ -258,6 +259,10 @@ namespace MANIFOLD.AnimGraph {
 
         private void OnBodyGroupEventDefault(BodyGroupEvent evt) {
             Renderer.SetBodyGroup(evt.BodyGroup, evt.Value);
+        }
+
+        private void OnTagEventInternal(Tag tag) {
+            OnTagEvent?.Invoke(tag);
         }
     }
 }

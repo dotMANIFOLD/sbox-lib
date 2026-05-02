@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using Editor;
+using MANIFOLD.Inspector;
 using Sandbox;
 
 namespace MANIFOLD.AnimGraph.Editor {
@@ -22,6 +23,8 @@ namespace MANIFOLD.AnimGraph.Editor {
         private int oldCollectionCount;
         private bool addOperation;
         private int addCount;
+
+        private int wantsRebuild;
         
         public event Action OnNodeInputChanged;
         
@@ -36,6 +39,18 @@ namespace MANIFOLD.AnimGraph.Editor {
             ShowLabel(EMPTY_LABEL);
         }
 
+        // the dumbest workaround to an event system that used to work properly
+        [EditorEvent.Frame]
+        private void OnFrame() {
+            if (wantsRebuild == 0) {
+                EditorEvent.Run(EVENT_REBUILD);
+            }
+            wantsRebuild--;
+            if (wantsRebuild < -10) {
+                wantsRebuild = -10;
+            }
+        }
+        
         public void SetNodes(IEnumerable<BaseNode> nodes) {
             Layout.Clear(true);
             
@@ -101,12 +116,12 @@ namespace MANIFOLD.AnimGraph.Editor {
             scroll.Canvas = new Widget();
             scroll.Canvas.Layout = Layout.Column();
             scroll.Canvas.SetSizeMode(SizeMode.Default, SizeMode.Flexible);
+            Layout.Add(scroll);
             
             scroll.Canvas.Layout.Add(sheet);
             scroll.Canvas.Layout.AddStretchCell();
-            
-            Layout.Add(scroll);
-            EditorEvent.Run(EVENT_REBUILD);
+
+            wantsRebuild = 2;
         }
         
         private void ShowLabel(string text) {
@@ -142,6 +157,15 @@ namespace MANIFOLD.AnimGraph.Editor {
 
                 if (addCount == 0) {
                     OnNodeInputChanged?.Invoke();
+                }
+            }
+            
+            // ON TOOL CHANGE
+            if (property.TryGetAttribute(out ToolChangeAttribute attr)) {
+                string functionName = attr.name ?? $"On{property.Name}Changed";
+                foreach (var target in property.Parent.Targets) {
+                    var type = TypeLibrary.GetType(target.GetType());
+                    type.GetMethod(functionName)?.Invoke(target);
                 }
             }
             

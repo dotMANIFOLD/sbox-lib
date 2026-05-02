@@ -77,15 +77,11 @@ namespace MANIFOLD.Animation {
         
         public static async Task ExtractManyAnimations(IEnumerable<AssetEntry> list) {
             foreach (var entry in list) {
-                await ExtractAnimations(entry.Asset);
+                var resource = entry.Asset.LoadResource<Model>();
+                foreach (var anim in resource.AnimationNames) {
+                    await ExtractSingleAnimation(entry.Asset, anim);
+                }
             }
-        }
-        
-        public static async Task ExtractAnimations(Asset asset) {
-            await VTools.Execute(new VTools.ExecutionInfo() {
-                command = "anim extract",
-                arguments = [ asset.GetCompiledFile(false) ]
-            });
         }
 
         private static void ShowSelectPrompt(string name, string message, IEnumerable<string> entries, Action<string> onConfirm) {

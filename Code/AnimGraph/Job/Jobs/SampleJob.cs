@@ -106,19 +106,21 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 BoneTransform transform = workingPose[i];
                 Transform local = transform.LocalTransform;
                 var group = trackCache[i];
-                
-                if (group.position != null) {
-                    local.Position = group.position.Get(frameAsInt);
-                    if (Interpolate) {
-                        var next = group.position.GetNext(frameAsInt);
-                        local.Position = local.Position.LerpTo(next, lerpFactor);
+
+                if (group != null) {
+                    if (group.position != null) {
+                        local.Position = group.position.Get(frameAsInt);
+                        if (Interpolate) {
+                            var next = group.position.GetNext(frameAsInt);
+                            local.Position = local.Position.LerpTo(next, lerpFactor);
+                        }
                     }
-                }
-                if (group.rotation != null) {
-                    local.Rotation = group.rotation.Get(frameAsInt);
-                    if (Interpolate) {
-                        var next = group.rotation.GetNext(frameAsInt);
-                        local.Rotation = local.Rotation.SlerpTo(next, lerpFactor);
+                    if (group.rotation != null) {
+                        local.Rotation = group.rotation.Get(frameAsInt);
+                        if (Interpolate) {
+                            var next = group.rotation.GetNext(frameAsInt);
+                            local.Rotation = local.Rotation.SlerpTo(next, lerpFactor);
+                        }
                     }
                 }
 
