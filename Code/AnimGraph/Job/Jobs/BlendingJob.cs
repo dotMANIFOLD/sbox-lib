@@ -1,5 +1,7 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
+using MANIFOLD.Animation;
 using MANIFOLD.Jobs;
 using Sandbox;
 
@@ -83,9 +85,19 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 cycleResult = cycleResult.LerpTo(cyclePos, weight);
             }
 
+            // Event propagation
+            List<IEvent> events = new List<IEvent>();
+            for (int i = 0; i < inputs.Length; i++) {
+                var job = inputs[i].Job;
+                if (job is null) continue;
+                if (job.OutputData is null) continue;
+                if (weights[i] < 0.1f) continue;
+                events.AddRange(job.OutputData.TriggeredEvents);
+            }
+            
             OutputData = baseResults != null ?
-                baseResults with { Pose = workingPose, CyclePosition = cycleResult, Finished = false } :
-                new JobResults(workingPose, cycleResult);
+                new JobResults(Pose: workingPose, CyclePosition: cycleResult, Finished: false, TriggeredEvents: events) :
+                new JobResults(workingPose, cycleResult, TriggeredEvents: events);
         }
 
         public virtual void SetLayerCount(int count) {

@@ -146,7 +146,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
                     Time -= duration * mult;
                 }
             }
-
+            
             OutputData = new JobResults(workingPose, Time / clip.FrameRate, !Looping && Time >= clip.Duration, triggeredEvents);
         }
 
