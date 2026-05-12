@@ -159,7 +159,7 @@ namespace MANIFOLD.Jobs {
             
             var target = job.Inputs[index];
             job.SetInput(index, null);
-            target.Job.RemoveOutput(job, index);
+            target.Job?.RemoveOutput(job, index);
         }
         
         // TRAVERSAL
