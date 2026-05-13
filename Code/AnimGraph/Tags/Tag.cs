@@ -49,7 +49,6 @@ namespace MANIFOLD.AnimGraph {
             activeHandles.Add(handle);
             if (activeHandles.Count == 1) {
                 OnStateChanged?.Invoke(this);
-                Log.Info($"Tag {Name} now active");
             }
         }
 
@@ -57,7 +56,6 @@ namespace MANIFOLD.AnimGraph {
             activeHandles.Remove(handle);
             if (activeHandles.Count == 0) {
                 OnStateChanged?.Invoke(this);
-                Log.Info($"Tag {Name} no longer active");
             }
         }
     }
