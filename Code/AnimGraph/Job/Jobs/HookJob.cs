@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using MANIFOLD.Jobs;
+using Sandbox.Diagnostics;
 
 namespace MANIFOLD.AnimGraph.Jobs {
     public class HookJob : BlendingJob, IOrderedJobGraph {
@@ -33,7 +34,13 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 throw new ArgumentException("The given branch id is already in use.");
             }
 
-            var index = branchGroups.Count;
+            var index = -1;
+            for (int i = 0; i < branchGroups.Count + 1; i++) {
+                if (branchGroups.ContainsKey(i)) continue;
+                index = i;
+                break;
+            }
+            Assert.AreNotEqual(index, -1);
             
             var topGroup = new OrderedJobGroup();
             topGroup.SetGraph(branchGroup);
