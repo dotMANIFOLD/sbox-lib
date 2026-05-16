@@ -10,7 +10,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         private List<IJob> jobsEnumerable;
         
         private Dictionary<string, int> idToIndex;
-        private List<OrderedJobGroup> branchGroups;
+        private Dictionary<int, OrderedJobGroup> branchGroups;
         private int activeBranch;
 
         public bool IsValid => true;
@@ -19,7 +19,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             branchGroup = new JobGroup();
             jobsEnumerable = new List<IJob>() { branchGroup, this };
             idToIndex = new Dictionary<string, int>();
-            branchGroups = new List<OrderedJobGroup>();
+            branchGroups = new Dictionary<int, OrderedJobGroup>();
             activeBranch = -1;
         }
 
@@ -56,12 +56,15 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             topGroup.BindAnimData(BindData);
             topGroup.SetAnimContext(Context);
-            
-            SetLayerCount(branchGroups.Count + 1);
+
+            // TODO: add input shrinking
+            if (Inputs.Count <= branchGroups.Count) {
+                SetLayerCount(branchGroups.Count + 1);
+            }
             root.OutputTo(this, index);
             
             idToIndex.Add(id, index);
-            branchGroups.Add(topGroup);
+            branchGroups.Add(index, topGroup);
         }
 
         public void RemoveBranch(string id) {
@@ -76,7 +79,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             SetInput(index, null);
             
             idToIndex.Remove(id);
-            branchGroups.Remove(group);
+            branchGroups.Remove(index);
         }
 
         public void SetActiveBranch(string id) {
