@@ -13,28 +13,30 @@ namespace MANIFOLD.AnimGraph {
         }
 
         public ParameterList(AnimGraph graph) : this() {
-            foreach (var parameter in graph.Parameters.Values) {
-                Add(parameter.Clone());
-            }
+            AddGraph(graph);
         }
 
         // ADD
         public void AddGraph(AnimGraph graph) {
             foreach (var parameter in graph.Parameters.Values) {
-                Add(parameter.Clone());
+                AddInternal(parameter.Clone());
             }
         }
         
         public void Add<T>(Parameter<T> parameter) {
-            if (parameters.ContainsKey(parameter.ID)) return;
-            if (parametersByName.ContainsKey(parameter.Name)) return;
-            
-            parameters.Add(parameter.ID, parameter);
-            parametersByName.Add(parameter.Name, parameter);
+            AddInternal(parameter);
         }
 
         // this is hidden for type safety
-        private void Add(Parameter parameter) {
+        private void AddInternal(Parameter parameter) {
+            if (parametersByName.TryGetValue(parameter.Name, out Parameter existing)) {
+                if (existing.GetType() != parameter.GetType()) {
+                    throw new ArgumentException($"Parameter {parameter.Name} has already been added. Cannot merge as types do not match.");
+                }
+                // merge
+                parameters.Add(parameter.ID, existing);
+                return;
+            }
             parameters.Add(parameter.ID, parameter);
             parametersByName.Add(parameter.Name, parameter);
         }
@@ -96,7 +98,7 @@ namespace MANIFOLD.AnimGraph {
         public ParameterList Clone() {
             var clone = new ParameterList();
             foreach (var parameter in parameters.Values) {
-                clone.Add(parameter.Clone());
+                clone.AddInternal(parameter.Clone());
             }
             return clone;
         }
