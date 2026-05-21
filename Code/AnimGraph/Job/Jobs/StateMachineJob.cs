@@ -39,7 +39,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         
         private float timeInState;
         private bool stateFinished;
-        private bool machineEnded;
+        private bool atEndState;
         
         public float TimeInState => timeInState;
         public bool StateFinished => stateFinished;
@@ -67,7 +67,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             base.Run();
 
-            OutputData = OutputData with { Finished = machineEnded };
+            OutputData = OutputData with { Finished = atEndState && stateFinished };
         }
 
         public override void Reset() {
@@ -120,7 +120,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
             tagHandles = state.tags?.Select(x => x.CreateHandle()).ToArray();
             timeInState = 0f;
             stateFinished = false;
-            machineEnded = state.end;
+            atEndState = state.end;
         }
     }
 }
