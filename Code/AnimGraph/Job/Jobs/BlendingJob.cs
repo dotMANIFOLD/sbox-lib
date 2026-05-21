@@ -85,19 +85,21 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 cycleResult = cycleResult.LerpTo(cyclePos, weight);
             }
 
-            // Event propagation
+            // Event and tag propagation
             List<IEvent> events = new List<IEvent>();
+            List<Tag> tags = new List<Tag>();
             for (int i = 0; i < inputs.Length; i++) {
                 var job = inputs[i].Job;
                 if (job is null) continue;
                 if (job.OutputData is null) continue;
                 if (weights[i] < 0.1f) continue;
-                events.AddRange(job.OutputData.TriggeredEvents);
+                if (job.OutputData.TriggeredEvents is not null) events.AddRange(job.OutputData.TriggeredEvents);
+                if (job.OutputData.TriggeredTags is not null) tags.AddRange(job.OutputData.TriggeredTags);
             }
             
             OutputData = baseResults is not null ?
-                new JobResults(workingPose, cycleResult, baseResults.Finished, events) :
-                new JobResults(workingPose, cycleResult, TriggeredEvents: events);
+                new JobResults(workingPose, cycleResult, baseResults.Finished, events, tags) :
+                new JobResults(workingPose, cycleResult, TriggeredEvents: events, TriggeredTags: tags);
         }
 
         public virtual void SetLayerCount(int count) {

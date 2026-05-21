@@ -22,6 +22,7 @@ namespace MANIFOLD.AnimGraph {
         private JobContext context;
         private ParameterList parameters;
         private TagList tags;
+        private Dictionary<Tag, IDisposable> tagHandles;
         
         private OrderedJobGroup mainGroup;
         private AnimGraphJob graphJob;
@@ -184,6 +185,23 @@ namespace MANIFOLD.AnimGraph {
                         }
                     }
                 }
+                if (results.TriggeredTags is not null) {
+                    // this is really ugly, is there a better solution?
+                    List<Tag> removeQueue = new List<Tag>();
+                    foreach (var pair in tagHandles) {
+                        if (results.TriggeredTags.Contains(pair.Key)) continue;
+                        pair.Value.Dispose();
+                        removeQueue.Add(pair.Key);
+                    }
+                    foreach (var item in removeQueue) {
+                        tagHandles.Remove(item);
+                    }
+                    foreach (var tag in results.TriggeredTags) {
+                        if (!tagHandles.ContainsKey(tag)) {
+                            tagHandles.Add(tag, tag.CreateHandle());
+                        }
+                    }
+                }
             }
         }
         
@@ -236,6 +254,12 @@ namespace MANIFOLD.AnimGraph {
             if (graph == null) return;
             tags = new TagList();
             tags.AddGraph(graph);
+
+            tagHandles ??= new Dictionary<Tag, IDisposable>();
+            foreach (var handle in tagHandles.Values) {
+                handle.Dispose();
+            }
+            tagHandles.Clear();
         }
 
         public IBaseAnimJob GetAccessibleJob(string str) {

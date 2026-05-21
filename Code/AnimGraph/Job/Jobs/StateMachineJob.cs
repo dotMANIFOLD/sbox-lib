@@ -35,7 +35,7 @@ namespace MANIFOLD.AnimGraph.Jobs {
         private State initialState;
         private State[] alwaysEvaluateStates;
         private State currentState;
-        private IEnumerable<IDisposable> tagHandles;
+        private IEnumerable<Tag> triggeredTags;
         
         private float timeInState;
         private bool stateFinished;
@@ -67,7 +67,10 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             base.Run();
 
-            OutputData = OutputData with { Finished = atEndState && stateFinished };
+            OutputData = OutputData with {
+                Finished = atEndState && stateFinished,
+                TriggeredTags = OutputData.TriggeredTags is not null ? OutputData.TriggeredTags.Concat(triggeredTags).ToList() : triggeredTags?.ToList()
+            };
         }
 
         public override void Reset() {
@@ -109,15 +112,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
         }
 
         private void SetCurrentState(State state) {
-            if (tagHandles != null) {
-                foreach (var handle in tagHandles) {
-                    handle.Dispose();
-                }
-                tagHandles = null;
-            }
-            
             currentState = state;
-            tagHandles = state.tags?.Select(x => x.CreateHandle()).ToArray();
+            triggeredTags = state.tags;
             timeInState = 0f;
             stateFinished = false;
             atEndState = state.end;

@@ -5,13 +5,16 @@ using MANIFOLD.Animation;
 using MANIFOLD.Jobs;
 
 namespace MANIFOLD.AnimGraph {
-    public record JobResults(Pose Pose, float CyclePosition = 0, bool Finished = false, List<IEvent> TriggeredEvents = null) {
+    public record JobResults(Pose Pose, float CyclePosition = 0, bool Finished = false, List<IEvent> TriggeredEvents = null, List<Tag> TriggeredTags = null) {
         protected JobResults(JobResults original) {
             Pose = original.Pose;
             CyclePosition = original.CyclePosition;
             Finished = original.Finished;
             if (original.TriggeredEvents != null) {
                 TriggeredEvents = new List<IEvent>(original.TriggeredEvents);
+            }
+            if (original.TriggeredTags != null) {
+                TriggeredTags = new List<Tag>(original.TriggeredTags);
             }
         }
     }
