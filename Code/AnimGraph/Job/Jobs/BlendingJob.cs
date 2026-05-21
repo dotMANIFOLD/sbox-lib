@@ -95,8 +95,8 @@ namespace MANIFOLD.AnimGraph.Jobs {
                 events.AddRange(job.OutputData.TriggeredEvents);
             }
             
-            OutputData = baseResults != null ?
-                new JobResults(Pose: workingPose, CyclePosition: cycleResult, Finished: false, TriggeredEvents: events) :
+            OutputData = baseResults is not null ?
+                new JobResults(workingPose, cycleResult, baseResults.Finished, events) :
                 new JobResults(workingPose, cycleResult, TriggeredEvents: events);
         }
 
