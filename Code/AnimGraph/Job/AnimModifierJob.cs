@@ -24,17 +24,19 @@ namespace MANIFOLD.AnimGraph {
 
         protected void CreateOutput(Pose pose) {
             var baseOutput = inputs[0].Job?.OutputData ?? new JobResults(null);
+            var otherOutput = inputs[1].Job?.OutputData ?? new JobResults(null);
             
-            var baseEvents = baseOutput.TriggeredEvents;
-            var childEvents = inputs[1].Job?.OutputData?.TriggeredEvents;
-            List<IEvent> outputEvents;
-            if (childEvents is { Count: > 0 }) {
-                outputEvents = baseEvents?.Concat(childEvents).Distinct().ToList() ?? childEvents;
-            } else {
-                outputEvents = baseEvents;
+            List<IEvent> outputEvents = baseOutput.TriggeredEvents;
+            if (otherOutput.TriggeredEvents is { Count: > 0 }) {
+                outputEvents = outputEvents?.Concat(otherOutput.TriggeredEvents).Distinct().ToList() ?? otherOutput.TriggeredEvents;
+            }
+            
+            List<Tag> outputTags = baseOutput.TriggeredTags;
+            if (otherOutput.TriggeredTags is { Count: > 0 }) {
+                outputTags = outputTags?.Concat(otherOutput.TriggeredTags).Distinct().ToList() ?? otherOutput.TriggeredTags;
             }
 
-            OutputData = baseOutput with { Pose = pose, TriggeredEvents = outputEvents };
+            OutputData = baseOutput with { Pose = pose, TriggeredEvents = outputEvents, TriggeredTags = outputTags };
         }
     }
 }

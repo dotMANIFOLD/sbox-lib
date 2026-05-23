@@ -67,9 +67,12 @@ namespace MANIFOLD.AnimGraph.Jobs {
             
             base.Run();
 
+            var tags = OutputData.TriggeredTags ?? Enumerable.Empty<Tag>();
+            if (triggeredTags is not null) tags = tags.Concat(triggeredTags);
+            
             OutputData = OutputData with {
                 Finished = atEndState && stateFinished,
-                TriggeredTags = OutputData.TriggeredTags is not null ? OutputData.TriggeredTags.Concat(triggeredTags).ToList() : triggeredTags?.ToList()
+                TriggeredTags = OutputData.TriggeredTags is not null ? tags.ToList() : triggeredTags?.ToList()
             };
         }
 
