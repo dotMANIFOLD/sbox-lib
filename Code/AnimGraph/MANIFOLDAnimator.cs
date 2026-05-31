@@ -204,6 +204,68 @@ namespace MANIFOLD.AnimGraph {
                 }
             }
         }
+
+        /// <summary>
+        /// Update and run the animation jobs.
+        /// </summary>
+        /// <param name="deltaTime">Time passed.</param>
+        public void UpdateAnimation(float deltaTime) {
+            if (graph == null || renderer == null) return;
+            
+            if (mainGroup is null) {
+                if (parameters is null) RebuildParameters();
+                if (tags is null) RebuildTags();
+                RebuildGraph();
+            }
+            
+            context.time += deltaTime;
+            context.deltaTime = deltaTime;
+            
+            using (Performance.Scope("Animation")) {
+                applyJob.TraverseLeft<IBaseAnimJob, IInputAnimJob>(PrepareTraverse);
+                mainGroup.Run();
+                parameters.Reset(true);
+            }
+        }
+
+        /// <summary>
+        /// Update all events and tags since the last animation update.
+        /// </summary>
+        /// <remarks>This should only run on the main thread.</remarks>
+        public void UpdateEvents() {
+            var results = applyJob.LastResult;
+            
+            if (results.TriggeredEvents != null) {
+                foreach (var evt in results.TriggeredEvents) {
+                    if (evt is GenericEvent genericEvent) {
+                        OnGenericEvent?.Invoke(genericEvent);
+                    } else if (evt is FootstepEvent footstepEvent) {
+                        OnFootstepEvent?.Invoke(footstepEvent);
+                    } else if (evt is SoundEvent soundEvent) {
+                        OnSoundEvent?.Invoke(soundEvent);
+                    } else if (evt is BodyGroupEvent bodyGroupEvent) {
+                        OnBodyGroupEvent?.Invoke(bodyGroupEvent);
+                    }
+                }
+            }
+            if (results.TriggeredTags is not null) {
+                // this is really ugly, is there a better solution?
+                List<Tag> removeQueue = new List<Tag>();
+                foreach (var pair in tagHandles) {
+                    if (results.TriggeredTags.Contains(pair.Key)) continue;
+                    pair.Value.Dispose();
+                    removeQueue.Add(pair.Key);
+                }
+                foreach (var item in removeQueue) {
+                    tagHandles.Remove(item);
+                }
+                foreach (var tag in results.TriggeredTags) {
+                    if (!tagHandles.ContainsKey(tag)) {
+                        tagHandles.Add(tag, tag.CreateHandle());
+                    }
+                }
+            }
+        }
         
         /// <summary>
         /// Rebuilds the underlying job graph. Shouldn't have to be called unless the AnimGraph was modified.
@@ -283,10 +345,6 @@ namespace MANIFOLD.AnimGraph {
 
         private void OnBodyGroupEventDefault(BodyGroupEvent evt) {
             Renderer.SetBodyGroup(evt.BodyGroup, evt.Value);
-        }
-
-        private void OnTagEventInternal(Tag tag) {
-            OnTagEvent?.Invoke(tag);
         }
     }
 }

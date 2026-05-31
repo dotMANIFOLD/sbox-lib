@@ -27,10 +27,15 @@ namespace MANIFOLD.AnimGraph {
             } catch (Exception e) {
                 Log.Error($"Error while updating animation: {e}");
             }
+
+            // Update events on the main thread to prevent issues
+            foreach (var animator in animators) {
+                animator.UpdateEvents();
+            }
         }
 
         private void ProcessAnimator(MANIFOLDAnimator animator) {
-            animator.Update(Time.Delta);
+            animator.UpdateAnimation(Time.Delta);
         }
     }
 }
