@@ -171,7 +171,9 @@ namespace MANIFOLD.AnimGraph.Editor {
             widget.OnDestroyedEvent = () => {
                 openTools.Remove(data.RealNode);
             };
-            dock.AddDock(graphView, widget, DockArea.Inside);
+
+            var toolDock = dock.CreateDockWidget(widget.WindowTitle, null, widget);
+            dock.AddDock(toolDock, dock.FindDockWidget(graphView));
             openTools.Add(data.RealNode, widget);
             return widget;
         }
@@ -214,21 +216,25 @@ namespace MANIFOLD.AnimGraph.Editor {
             graphView = new AnimGraphView(this);
             
             inspectorPanel.OnNodeInputChanged += OnInputChanged;
-            
-            dock.RegisterDockType("Preview", null, () => previewPanel = new PreviewPanel(this));
-            dock.RegisterDockType("Inspector", null, () => inspectorPanel = new InspectorPanel(this));
-            dock.RegisterDockType("ParameterList", null, () => parameterPanel = new ParameterPanel(this));
-            dock.RegisterDockType("TagList", null, () => tagPanel = new TagPanel(this));
-            
-            dock.AddDock(null, graphView, DockArea.Right, DockManager.DockProperty.HideCloseButton);
-            dock.AddDock(graphView, previewPanel, DockArea.Left, DockManager.DockProperty.HideOnClose, split: 0.2f);
-            dock.AddDock(graphView, inspectorPanel, DockArea.Right, DockManager.DockProperty.HideOnClose, split: 0.2f);
-            dock.AddDock(inspectorPanel, resourcePanel, DockArea.Inside, DockManager.DockProperty.HideOnClose);
+
+            var graphDock = dock.SetCentralWidget(graphView);
+            dock.AddDock("Preview", null, previewPanel, DockArea.Left, graphDock);
+            dock.AddDock("Inspector", null, inspectorPanel, DockArea.Right, graphDock);
+
+            var previewDock = dock.FindDockWidget(previewPanel);
+            var inspectorDock = dock.FindDockWidget(inspectorPanel);
+
+            dock.AddDock("ResourcePanel", null, resourcePanel, DockArea.Center, inspectorDock);
             dock.RaiseDock(inspectorPanel);
-            dock.AddDock(previewPanel, parameterPanel, DockArea.Bottom, DockManager.DockProperty.HideOnClose, split: 0.4f);
-            dock.AddDock(parameterPanel, tagPanel, DockArea.Inside, DockManager.DockProperty.HideOnClose);
+            dock.AddDock("ParameterList", null, parameterPanel, DockArea.Bottom, previewDock);
+
+            var parameterDock = dock.FindDockWidget(parameterPanel);
+            dock.AddDock("TagList", null, tagPanel, DockArea.Center, parameterDock);
 
             dock.RaiseDock(parameterPanel);
+
+            dock.SetSplitterProportions(graphDock, [0.2f, 0.6f, 0.2f]);
+            dock.SetSplitterProportions(previewDock, [0.6f, 0.4f]);
             
             dock.Update();
         }
